@@ -1,14 +1,12 @@
 from typing import AsyncIterable, NewType
 
-import databases
 import sqlalchemy
-from databases import Database
 from dishka import Provider, Scope, provide
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 metadata = sqlalchemy.MetaData()
 
 DatabaseUrl = NewType("DatabaseUrl", str)
-_Database = NewType("_Database", Database)
 
 
 class ConnectionProvider(Provider):
@@ -18,19 +16,18 @@ class ConnectionProvider(Provider):
 
     @provide(scope=Scope.APP)
     def db_url(self) -> DatabaseUrl:
-        return self.uri
+        return DatabaseUrl(self.uri)
 
     @provide(scope=Scope.APP)
-    def _database(self) -> _Database:
-        return _Database(databases.Database(self.uri))
+    def engine(self, db_url: DatabaseUrl) -> AsyncEngine:
+        return create_async_engine(str(db_url), echo=False)
 
-    @provide(scope=Scope.APP)
-    async def database(self, db: _Database) -> AsyncIterable[Database]:
-        await db.connect()
-        yield db
-        await db.disconnect()
+    @provide(scope=Scope.REQUEST)
+    async def session(self, engine: AsyncEngine) -> AsyncIterable[AsyncSession]:
+        async with AsyncSession(engine) as session:
+            yield session
 
 
-def create_tables(db_url: DatabaseUrl):
-    engine = sqlalchemy.create_engine(db_url, connect_args={"check_same_thread": False})
-    metadata.create_all(engine)
+async def create_tables(engine: AsyncEngine):
+    async with engine.begin() as conn:
+        await conn.run_sync(metadata.create_all)

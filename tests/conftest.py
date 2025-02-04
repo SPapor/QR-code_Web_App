@@ -1,16 +1,31 @@
 import pytest
 import pytest_asyncio
-from core.database import ConnectionProvider
-from databases import Database
-from dishka import make_async_container
+from dishka import Provider, decorate, make_async_container
+from sqlalchemy.ext.asyncio import AsyncEngine
+
+from core.database import ConnectionProvider, create_tables
+from user.providers import UserProvider
+
+
+class DatabaseWithTablesProvider(Provider):
+    @decorate
+    async def create_tables_on_connection(self, engine: AsyncEngine) -> AsyncEngine:
+        await create_tables(engine)
+        return engine
 
 
 @pytest.fixture
-def container():
-    return make_async_container(ConnectionProvider("sqlite:///:memory:"))
+async def container():
+    container = make_async_container(
+        ConnectionProvider("sqlite+aiosqlite:///:memory:"),
+        DatabaseWithTablesProvider(),
+        UserProvider(),
+    )
+    yield container
+    await container.close()
 
 
 @pytest_asyncio.fixture
-async def database(container) -> Database:
-    database = await container.get(Database)
-    return database
+async def request_container(container):
+    async with container() as request_container:
+        yield request_container
