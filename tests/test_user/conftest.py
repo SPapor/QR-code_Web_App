@@ -10,15 +10,18 @@ async def user_crud(request_container) -> UserCrud:
 
 
 @pytest.fixture
-def users_payload(request):
-    marker = request.node.get_closest_marker("users_number")
-    users_number = marker.args[0] if marker else 1
+def users_payload(users_number):
     return [{"username": f"test_user_{i}"} for i in range(users_number)]
 
 
 @pytest.fixture
 def user_payload(users_payload):
     return users_payload[0]
+
+
+@pytest.fixture
+def users_number():
+    return 1
 
 
 @pytest_asyncio.fixture

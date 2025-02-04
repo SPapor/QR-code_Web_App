@@ -26,11 +26,15 @@ class CrudBase[ID, DTO]:
         return res.mappings().one_or_none()
 
     async def create_many(self, objs: Sequence[DTO]) -> list[ID]:
+        objs = list(objs)
+        if len(objs) == 0:
+            return []
         # TODO: res = self.session.execute(... .returning(self.table.c.id)))
         res = ...
         return [row[0] for row in res.all()]
 
     async def create_and_get_many(self, objs: Sequence[DTO]) -> Sequence[DTO]:
+        objs = list(objs)
         ...  # TODO
 
     async def update(self, values: DTO) -> None:
