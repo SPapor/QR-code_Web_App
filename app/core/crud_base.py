@@ -24,3 +24,43 @@ class CrudBase[ID, DTO]:
     async def create_and_get(self, obj: DTO) -> DTO:
         res = await self.session.execute(insert(self.table).values(**obj).returning(self.table))
         return res.mappings().one_or_none()
+
+    async def create_many(self, objs: Sequence[DTO]) -> list[ID]:
+        # TODO: res = self.session.execute(... .returning(self.table.c.id)))
+        res = ...
+        return [row[0] for row in res.all()]
+
+    async def create_and_get_many(self, objs: Sequence[DTO]) -> Sequence[DTO]:
+        ...  # TODO
+
+    async def update(self, values: DTO) -> None:
+        id_ = values.pop("id")
+        if not values:
+            return
+        # TODO
+
+    async def update_many(self, objs: Sequence[DTO]) -> None:
+        for obj in objs:
+            # TODO
+            ...
+
+    async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
+        # TODO
+        ...
+
+    async def delete(self, id_: ID) -> None:
+        # TODO
+        ...
+
+    async def delete_many(self, ids: Sequence[ID]) -> None:
+        # TODO
+        ...
+
+    async def count(self) -> int:
+        # TODO
+        res = ...
+        return res.scalar()
+
+    async def get_all(self) -> Sequence[DTO]:
+        # TODO
+        ...
