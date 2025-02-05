@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from core.crud_base import CrudBase, DTO
+from core.crud_base import DTO, CrudBase
 from user.tables import user_table
 
 

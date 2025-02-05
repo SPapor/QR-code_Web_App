@@ -1,6 +1,6 @@
-from typing import ClassVar, Sequence, TypeVar, Mapping, Any
+from typing import Any, ClassVar, Mapping, Sequence, TypeVar
 
-from sqlalchemy import Table, insert, literal, select, update, delete, func
+from sqlalchemy import Table, insert, literal, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 DTO = TypeVar("DTO", bound=Mapping[str, Any])
@@ -29,19 +29,23 @@ class CrudBase[ID, DTO]:
         objs = list(objs)
         if len(objs) == 0:
             return []
-        # TODO: res = self.session.execute(... .returning(self.table.c.id)))
-        res = ...
+        res = await self.session.execute(insert(self.table).values(objs).returning(self.table.c.id))
         return [row[0] for row in res.all()]
 
     async def create_and_get_many(self, objs: Sequence[DTO]) -> Sequence[DTO]:
         objs = list(objs)
-        ...  # TODO
+        if len(objs) == 0:
+            return []
+        res = await self.session.execute(insert(self.table).values(objs).returning(self.table))
+        return res.mappings().all()
 
     async def update(self, values: DTO) -> None:
         id_ = values.pop("id")
         if not values:
             return
-        # TODO
+        await self.session.execute(
+            update(self.table).where(self.table.c.id == literal(id_)).values(values).returning(self.table)
+        )
 
     async def update_many(self, objs: Sequence[DTO]) -> None:
         for obj in objs:
@@ -49,8 +53,9 @@ class CrudBase[ID, DTO]:
             ...
 
     async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
-        # TODO
-        ...
+        for id in ids:
+            res = await self.session.execute(select(self.table).where(self.table.c.id == literal(id)))
+            return res.mappings().all()
 
     async def delete(self, id_: ID) -> None:
         # TODO
