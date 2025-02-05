@@ -72,7 +72,7 @@ async def test_user_crud_count(user_crud, users_payload, users_number):
     await user_crud.create({"username": "User1"})
     await user_crud.create({"username": "User2"})
     assert await user_crud.count() == 2
-    await user_crud.delete_many([(await user_crud.get_all())[0]["id"]])
+    await user_crud.delete_many([(await user_crud.get_all())[0].id])
     assert await user_crud.count() == 1
 
 
