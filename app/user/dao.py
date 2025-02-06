@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from core.crud_base import DTO, CrudBase
+from core.repo_base import RepoBase
 from core.serializer import DataclassSerializer
 from user.models import User
 from user.tables import user_table
@@ -12,3 +13,8 @@ class UserCrud(CrudBase[UUID, DTO]):
 
 class UserSerializer(DataclassSerializer[User, DTO]):
     model = User
+
+
+class UserRepo(RepoBase[UUID, User]):
+    def __init__(self, crud: UserCrud, serializer: UserSerializer):
+        super().__init__(crud, serializer)

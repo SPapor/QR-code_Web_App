@@ -1,8 +1,9 @@
 from dishka import Provider, Scope, provide
 
-from user.dao import UserCrud, UserSerializer
+from user.dao import UserCrud, UserSerializer, UserRepo
 
 
 class UserProvider(Provider):
     serializer = provide(UserSerializer, scope=Scope.APP)
     crud = provide(UserCrud, scope=Scope.REQUEST)
+    repo = provide(UserRepo, scope=Scope.REQUEST)

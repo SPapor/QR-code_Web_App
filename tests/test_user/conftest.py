@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from user.dao import UserCrud, UserSerializer
+from user.dao import UserCrud, UserRepo, UserSerializer
 from user.models import User
 
 
@@ -15,6 +15,11 @@ async def user_crud(request_container) -> UserCrud:
 @pytest_asyncio.fixture
 async def user_serializer(request_container) -> UserSerializer:
     return await request_container.get(UserSerializer)
+
+
+@pytest_asyncio.fixture
+async def user_repo(request_container) -> UserRepo:
+    return await request_container.get(UserRepo)
 
 
 @pytest.fixture
