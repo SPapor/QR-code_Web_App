@@ -1,17 +1,20 @@
 import asyncio
 
-from core.database import ConnectionProvider, DatabaseUrl, create_tables
-from core.settings import settings
 from dishka import make_async_container
+from sqlalchemy.ext.asyncio import AsyncEngine
+
+from core.database import ConnectionProvider, create_tables
+from core.settings import settings
+from user.providers import UserProvider
 
 
 def get_container():
-    return make_async_container(ConnectionProvider(f"sqlite:///./{settings.db_name}"))
+    return make_async_container(ConnectionProvider(f"sqlite:///./{settings.db_name}"), UserProvider())
 
 
 async def main():
     container = get_container()
-    create_tables(db_url=await container.get(DatabaseUrl))
+    await create_tables(await container.get(AsyncEngine))
 
 
 if __name__ == '__main__':
