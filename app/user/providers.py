@@ -1,6 +1,6 @@
 from dishka import Provider, Scope, provide
 
-from user.dao import UserCrud, UserSerializer, UserRepo
+from user.dao import UserCrud, UserRepo, UserSerializer
 
 
 class UserProvider(Provider):

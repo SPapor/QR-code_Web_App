@@ -50,4 +50,4 @@ async def users_dto_in_db(user_crud, users_dto):
 
 @pytest.fixture
 def user():
-    return User(username="test_user")
+    return User(id=uuid4(), username="test_user")
