@@ -55,16 +55,15 @@ class CrudBase[ID, DTO]:
             )
 
     async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
-        for id in ids:
-            res = await self.session.execute(select(self.table).where(self.table.c.id == literal(id)))
+        for id_ in ids:
+            res = await self.session.execute(select(self.table).where(self.table.c.id == literal(id_)))
             return res.mappings().all()
 
     async def delete(self, id_: ID) -> None:
-        await self.session.execute(delete(self.table).where(self.table.c.id == literal(id_)).returning())
+        await self.session.execute(delete(self.table).where(self.table.c.id == literal(id_)))
 
     async def delete_many(self, ids: Sequence[ID]) -> None:
-        for id in ids:
-            await self.session.execute(delete(self.table).where(self.table.c.id == literal(id)).returning())
+        await self.session.execute(delete(self.table).where(self.table.c.id.in_(ids)))
 
     async def count(self) -> int:
         res = await self.session.execute(select(func.count()).select_from(self.table))
