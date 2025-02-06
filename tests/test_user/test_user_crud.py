@@ -66,16 +66,13 @@ async def test_user_crud_delete_many(user_crud, users_in_db):
     assert not users
 
 
-@pytest.mark.parametrize('users_number', [2])
-async def test_user_crud_count(user_crud, users_payload, users_number):
-    assert await user_crud.count() == 0
-    await user_crud.create({"username": "User1"})
-    await user_crud.create({"username": "User2"})
-    assert await user_crud.count() == 2
-    await user_crud.delete_many([(await user_crud.get_all())[0].id])
-    assert await user_crud.count() == 1
+@pytest.mark.parametrize('users_number', [0, 1, 2, 5, 10])
+async def test_user_crud_count(user_crud, users_in_db, users_number):
+    assert await user_crud.count() == users_number
 
 
 @pytest.mark.parametrize('users_number', [0, 1, 2, 5, 10])
 async def test_user_crud_get_all(user_crud, users_in_db, users_number):
     assert len(await user_crud.get_all()) == users_number
+    for user, db_user in zip(await user_crud.get_all(), users_in_db):
+        assert user['username'] == db_user['username']
