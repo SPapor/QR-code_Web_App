@@ -1,9 +1,7 @@
-from typing import Any, ClassVar, Mapping, Sequence, TypeVar
+from typing import ClassVar, Sequence
 
 from sqlalchemy import Table, delete, func, insert, literal, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-
-DTO = TypeVar("DTO", bound=Mapping[str, Any])
 
 
 class CrudBase[ID, DTO]:
