@@ -17,5 +17,7 @@ class UserSerializer(DataclassSerializer[User, DTO]):
 
 
 class UserRepo(RepoBase[UUID, User]):
+    crud: UserCrud
+
     def __init__(self, crud: UserCrud, serializer: UserSerializer):
         super().__init__(crud, serializer)
