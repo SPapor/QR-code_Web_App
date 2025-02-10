@@ -3,12 +3,18 @@ from __future__ import annotations
 import dataclasses
 from abc import ABC, abstractmethod
 from dataclasses import is_dataclass
-from typing import Any, Mapping, TypeVar
-
-DTO = TypeVar("DTO", bound=Mapping[str, Any])
+from typing import Protocol
 
 
-class Serializer[Model, DTO](ABC):
+class Serializer[Model, DTO](Protocol):
+    def serialize(self, obj: Model) -> DTO:
+        pass
+
+    def deserialize(self, obj: DTO) -> Model:
+        pass
+
+
+class SerializerBase[Model, DTO](ABC, Serializer[Model, DTO]):
     @abstractmethod
     def serialize(self, obj: Model) -> DTO:
         pass
@@ -32,7 +38,7 @@ class FlatSerializer[Model, DTO](Serializer[list[Model], list[DTO]]):
         return [self.serializer.deserialize(obj) for obj in objs]
 
 
-class DataclassSerializer[Model, DTO](Serializer):
+class DataclassSerializer[Model, DTO](Serializer[Model, DTO]):
     model: type[Model]
 
     def __init_subclass__(cls, **kwargs):

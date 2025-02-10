@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from core.crud_base import DTO, CrudBase
+from core.crud_base import CrudBase
 from core.repo_base import RepoBase
 from core.serializer import DataclassSerializer
+from core.types import DTO
 from user.models import User
 from user.tables import user_table
 
