@@ -14,3 +14,39 @@ class RepoBase[ID, Model]:
     async def get_by_id(self, id_: ID) -> Model:
         dto = await self.crud.get_by_id(id_)
         return self.serializer.deserialize(dto)
+
+    async def create(self, model:Model) -> ID:
+        dto = await self.serializer.serialize(model)
+        return self.crud.create(dto)
+
+
+    async def create_and_get(self, model:Model) -> Model:
+        dto_serializer = await self.serializer.serialize(model)
+        dto = await self.crud.create_and_get(dto_serializer)
+        return self.serializer.deserialize(dto)
+
+    async def create_many(self, model:Model) -> list[ID]:
+        dto = await self.serializer.serialize(model)
+        return [self.crud.create_many(dto)]
+
+    # async def create_and_get_many(self, objs: Sequence[DTO]) -> Sequence[DTO]:
+    #     pass
+    #
+    # async def update(self, values: DTO) -> None:
+    #     pass
+    #
+    # async def update_many(self, objs: Sequence[DTO]) -> None:
+    #     pass
+    # async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
+    #     pass
+    # async def delete(self, id_: ID) -> None:
+    #     pass
+    #
+    # async def delete_many(self, ids: Sequence[ID]) -> None:
+    #     pass
+    #
+    # async def count(self) -> int:
+    #     pass
+    #
+    # async def get_all(self) -> Sequence[DTO]:
+    #     pass
