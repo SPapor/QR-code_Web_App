@@ -1,4 +1,4 @@
-from typing import Mapping, Any, NewType
+from typing import Any, Mapping, NewType
 
 DTO = Mapping[str, Any]
 Model = NewType('Model', Any)
