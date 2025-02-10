@@ -51,3 +51,8 @@ async def users_dto_in_db(user_crud, users_dto):
 @pytest.fixture
 def user():
     return User(id=uuid4(), username="test_user")
+
+
+@pytest.fixture
+def users(users_number):
+    return [User(id=uuid4(), username=f"test_user_{i}") for i in range(users_number)]

@@ -13,6 +13,10 @@ class Serializer[Model, DTO](Protocol):
     def deserialize(self, obj: DTO) -> Model:
         pass
 
+    @property
+    def flat(self) -> Serializer[list[Model], list[DTO]]:
+        pass
+
 
 class SerializerBase[Model, DTO](ABC, Serializer[Model, DTO]):
     @abstractmethod
@@ -23,11 +27,12 @@ class SerializerBase[Model, DTO](ABC, Serializer[Model, DTO]):
     def deserialize(self, obj: DTO) -> Model:
         pass
 
+    @property
     def flat(self) -> Serializer[list[Model], list[DTO]]:
         return FlatSerializer(self)
 
 
-class FlatSerializer[Model, DTO](Serializer[list[Model], list[DTO]]):
+class FlatSerializer[Model, DTO](SerializerBase[list[Model], list[DTO]]):
     def __init__(self, serializer: Serializer[Model, DTO]):
         self.serializer = serializer
 
@@ -38,7 +43,7 @@ class FlatSerializer[Model, DTO](Serializer[list[Model], list[DTO]]):
         return [self.serializer.deserialize(obj) for obj in objs]
 
 
-class DataclassSerializer[Model, DTO](Serializer[Model, DTO]):
+class DataclassSerializer[Model, DTO](SerializerBase[Model, DTO]):
     model: type[Model]
 
     def __init_subclass__(cls, **kwargs):

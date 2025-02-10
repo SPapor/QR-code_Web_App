@@ -9,7 +9,7 @@ from user.providers import UserProvider
 
 
 def get_container():
-    return make_async_container(ConnectionProvider(f"sqlite:///./{settings.db_name}"), UserProvider())
+    return make_async_container(ConnectionProvider(f"sqlite+aiosqlite:///./{settings.db_name}"), UserProvider())
 
 
 async def main():
