@@ -4,8 +4,8 @@ from uuid import UUID
 import pytest
 
 
-async def test_user_crud_create(user_crud):
-    id_ = await user_crud.create({"username": "TestName"})
+async def test_user_crud_create(user_crud, user_dto):
+    id_ = await user_crud.create(user_dto)
     assert isinstance(id_, UUID)
 
 
