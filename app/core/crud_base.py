@@ -47,15 +47,14 @@ class CrudBase[ID, DTO]:
 
     async def update_many(self, objs: Sequence[DTO]) -> None:
         for obj in objs:
-            id_ = obj.pop("id")
+            id_ = obj["id"]
             await self.session.execute(
                 update(self.table).where(self.table.c.id.is_(id_)).values(obj).returning(self.table)
             )
 
     async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
-        for id_ in ids:
-            res = await self.session.execute(select(self.table).where(self.table.c.id.is_(id_)))
-            return res.mappings().all()
+        res = await self.session.execute(select(self.table).where(self.table.c.id.in_(ids)))
+        return res.mappings().all()
 
     async def delete(self, id_: ID) -> None:
         await self.session.execute(delete(self.table).where(self.table.c.id.is_(id_)))

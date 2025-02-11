@@ -16,10 +16,12 @@ async def test_user_crud_get_by_id(user_crud, user_dto_in_db):
     assert user['username'] == user_dto_in_db['username']
 
 
-async def test_user_crud_get_many_by_ids(user_crud, users_dto_in_db):
+@pytest.mark.parametrize('users_number', [2])
+async def test_user_crud_get_many_by_ids(user_crud, users_dto_in_db, users_number):
     ids = [dto['id'] for dto in users_dto_in_db]
     users = await user_crud.get_many_by_ids(ids)
     assert len(users) == len(users_dto_in_db)
+    users_dto_in_db = sorted(users_dto_in_db, key=lambda x: x['id'])
     for dto, db_dto in zip(users, users_dto_in_db):
         assert isinstance(dto, Mapping)
         assert dto['username'] == db_dto['username']
@@ -46,10 +48,12 @@ async def test_user_crud_update(user_crud, user_dto_in_db):
     assert user['username'] == f'{user_dto_in_db["username"]}_updated'
 
 
-async def test_user_crud_update_many(user_crud, users_dto_in_db):
+@pytest.mark.parametrize('users_number', [2])
+async def test_user_crud_update_many(user_crud, users_dto_in_db, users_number):
     payload = [dict(dto) | {"username": f'{dto["username"]}_updated'} for dto in users_dto_in_db]
     await user_crud.update_many(payload)
     users = await user_crud.get_many_by_ids([dto['id'] for dto in users_dto_in_db])
+    payload = sorted(payload, key=lambda x: x['id'])
     for dto, payload in zip(users, payload):
         assert dto['username'] == payload['username']
 
@@ -60,7 +64,8 @@ async def test_user_crud_delete(user_crud, user_dto_in_db):
     assert user is None
 
 
-async def test_user_crud_delete_many(user_crud, users_dto_in_db):
+@pytest.mark.parametrize('users_number', [2])
+async def test_user_crud_delete_many(user_crud, users_dto_in_db, users_number):
     await user_crud.delete_many([dto['id'] for dto in users_dto_in_db])
     users = await user_crud.get_many_by_ids([dto['id'] for dto in users_dto_in_db])
     assert not users
