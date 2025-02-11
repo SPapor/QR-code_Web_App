@@ -4,12 +4,15 @@ from dishka import make_async_container
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from core.database import ConnectionProvider, create_tables
+from core.providers import DataclassSerializerProvider
 from core.settings import settings
 from user.providers import UserProvider
 
 
 def get_container():
-    return make_async_container(ConnectionProvider(f"sqlite+aiosqlite:///./{settings.db_name}"), UserProvider())
+    return make_async_container(
+        ConnectionProvider(f"sqlite+aiosqlite:///./{settings.db_name}"), DataclassSerializerProvider(), UserProvider()
+    )
 
 
 async def main():

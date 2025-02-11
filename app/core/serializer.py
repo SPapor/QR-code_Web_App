@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from dataclasses import is_dataclass
 from typing import Protocol
 
+from core.types import DTO
+
 
 class Serializer[Model, DTO](Protocol):
     def serialize(self, obj: Model) -> DTO:
@@ -43,20 +45,11 @@ class FlatSerializer[Model, DTO](SerializerBase[list[Model], list[DTO]]):
         return [self.serializer.deserialize(obj) for obj in objs]
 
 
-class DataclassSerializer[Model, DTO](SerializerBase[Model, DTO]):
-    model: type[Model]
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if not hasattr(cls, "model"):
-            raise TypeError(f"Class '{cls.__name__}' must define a 'model' attribute.")
-        if not isinstance(cls.model, type):
-            raise TypeError(
-                f"Attribute 'model' of class '{cls.__name__}' must be a dataclass type. "
-                f"Got '{cls.model}' with type '{type(cls.model).__name__}'."
-            )
-        if not is_dataclass(cls.model):
-            raise TypeError(f"Attribute 'model' of class '{cls.__name__}' must be a dataclass. Got '{cls.model}'.")
+class DataclassSerializer[Model, T_DTO: DTO](SerializerBase[Model, T_DTO]):
+    def __init__(self, model: type[Model]):
+        self.model = model
+        if not isinstance(model, type) or not is_dataclass(model):
+            raise TypeError(f"Argument 'model' must be a dataclass class. Got '{model}'.")
 
     def serialize(self, obj: Model) -> DTO:
         return dataclasses.asdict(obj)

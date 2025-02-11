@@ -1,6 +1,6 @@
 from typing import ClassVar, Sequence
 
-from sqlalchemy import Table, delete, func, insert, literal, select, update
+from sqlalchemy import Table, delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -11,7 +11,7 @@ class CrudBase[ID, DTO]:
         self.session = session
 
     async def get_by_id(self, id_: ID) -> DTO | None:
-        res = await self.session.execute(select(self.table).where(self.table.c.id == literal(id_)))
+        res = await self.session.execute(select(self.table).where(self.table.c.id.is_(id_)))
         return res.mappings().one_or_none()
 
     async def create(self, obj: DTO) -> ID:
@@ -42,23 +42,23 @@ class CrudBase[ID, DTO]:
         if not values:
             return
         await self.session.execute(
-            update(self.table).where(self.table.c.id == literal(id_)).values(values).returning(self.table)
+            update(self.table).where(self.table.c.id.is_(id_)).values(values).returning(self.table)
         )
 
     async def update_many(self, objs: Sequence[DTO]) -> None:
         for obj in objs:
             id_ = obj.pop("id")
             await self.session.execute(
-                update(self.table).where(self.table.c.id == literal(id_)).values(obj).returning(self.table)
+                update(self.table).where(self.table.c.id.is_(id_)).values(obj).returning(self.table)
             )
 
     async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
         for id_ in ids:
-            res = await self.session.execute(select(self.table).where(self.table.c.id == literal(id_)))
+            res = await self.session.execute(select(self.table).where(self.table.c.id.is_(id_)))
             return res.mappings().all()
 
     async def delete(self, id_: ID) -> None:
-        await self.session.execute(delete(self.table).where(self.table.c.id == literal(id_)))
+        await self.session.execute(delete(self.table).where(self.table.c.id.is_(id_)))
 
     async def delete_many(self, ids: Sequence[ID]) -> None:
         await self.session.execute(delete(self.table).where(self.table.c.id.in_(ids)))

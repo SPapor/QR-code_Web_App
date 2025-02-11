@@ -4,6 +4,7 @@ from dishka import Provider, decorate, make_async_container
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from core.database import ConnectionProvider, create_tables
+from core.providers import DataclassSerializerProvider
 from user.providers import UserProvider
 
 
@@ -19,6 +20,7 @@ async def container():
     container = make_async_container(
         ConnectionProvider("sqlite+aiosqlite:///:memory:"),
         DatabaseWithTablesProvider(),
+        DataclassSerializerProvider(),
         UserProvider(),
     )
     yield container

@@ -1,8 +1,9 @@
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from uuid import UUID
 
 
-@dataclass
+@dataclass(kw_only=True)
 class User:
     username: str
-    id: UUID = None
+    id: UUID = field(default_factory=uuid.uuid4)
