@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 from abc import ABC, abstractmethod
 from dataclasses import is_dataclass
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from core.types import DTO
 
@@ -16,7 +16,7 @@ class Serializer[Model, DTO](Protocol):
         pass
 
     @property
-    def flat(self) -> Serializer[list[Model], list[DTO]]:
+    def flat(self) -> Serializer[Sequence[Model], Sequence[DTO]]:
         pass
 
 
@@ -30,18 +30,18 @@ class SerializerBase[Model, DTO](ABC, Serializer[Model, DTO]):
         pass
 
     @property
-    def flat(self) -> Serializer[list[Model], list[DTO]]:
+    def flat(self) -> Serializer[Sequence[Model], Sequence[DTO]]:
         return FlatSerializer(self)
 
 
-class FlatSerializer[Model, DTO](SerializerBase[list[Model], list[DTO]]):
+class FlatSerializer[Model, DTO](SerializerBase[Sequence[Model], Sequence[DTO]]):
     def __init__(self, serializer: Serializer[Model, DTO]):
         self.serializer = serializer
 
-    def serialize(self, objs: list[Model]) -> list[DTO]:
+    def serialize(self, objs: Sequence[Model]) -> Sequence[DTO]:
         return [self.serializer.serialize(obj) for obj in objs]
 
-    def deserialize(self, objs: list[DTO]) -> list[Model]:
+    def deserialize(self, objs: Sequence[DTO]) -> Sequence[Model]:
         return [self.serializer.deserialize(obj) for obj in objs]
 
 
