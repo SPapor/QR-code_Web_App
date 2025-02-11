@@ -1,3 +1,4 @@
+from typing import Any, Mapping, Sequence
 from uuid import uuid4
 
 import pytest
@@ -23,36 +24,36 @@ async def user_repo(request_container) -> UserRepo:
 
 
 @pytest.fixture
-def users_dto(users_number):
+def users_dto(users_number) -> list[Mapping[str, Any]]:
     return [{"id": uuid4(), "username": f"test_user_{i}"} for i in range(users_number)]
 
 
 @pytest.fixture
-def user_dto(users_dto):
+def user_dto(users_dto) -> Mapping[str, Any]:
     assert len(users_dto) == 1
     return users_dto[0]
 
 
 @pytest.fixture
-def users_number():
+def users_number() -> int:
     return 1
 
 
 @pytest_asyncio.fixture
-async def user_dto_in_db(user_crud, user_dto):
+async def user_dto_in_db(user_crud, user_dto) -> Mapping[str, Any]:
     return await user_crud.create_and_get(user_dto)
 
 
 @pytest_asyncio.fixture
-async def users_dto_in_db(user_crud, users_dto):
+async def users_dto_in_db(user_crud, users_dto) -> Sequence[Mapping[str, Any]]:
     return await user_crud.create_and_get_many(users_dto)
 
 
 @pytest.fixture
-def user():
+def user() -> User:
     return User(id=uuid4(), username="test_user")
 
 
 @pytest.fixture
-def users(users_number):
+def users(users_number) -> list[User]:
     return [User(id=uuid4(), username=f"test_user_{i}") for i in range(users_number)]
