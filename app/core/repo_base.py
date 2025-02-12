@@ -20,20 +20,21 @@ class RepoBase[ID, Model]:
         return await self.crud.create(dto)
 
     async def create_and_get(self, model: Model) -> Model:
-        dto_serializer = await self.serializer.serialize(model)
-        dto = await self.crud.create_and_get(dto_serializer)
-        return self.serializer.deserialize(dto)
+        dto = self.serializer.serialize(model)
+        return await self.crud.create_and_get(dto)
 
     async def create_many(self, models: Sequence[Model]) -> list[ID]:
-        dto = [self.serializer.serialize(model) for model in models]
-        return await self.crud.create_many(dto)
+        dtos = self.serializer.flat.serialize(models)
+        return await self.crud.create_many(dtos)
 
-    # async def create_and_get_many(self, objs: Sequence[DTO]) -> Sequence[DTO]:
-    #     pass
-    #
-    # async def update(self, values: DTO) -> None:
-    #     pass
-    #
+    async def create_and_get_many(self, models: Sequence[Model]) -> Sequence[Model]:
+        dtos = self.serializer.flat.serialize(models)
+        return await self.crud.create_and_get_many(dtos)
+
+    async def update(self, values: Model) -> None:
+        dto = self.serializer.serialize(values)
+        await self.crud.update(dto)
+
     # async def update_many(self, objs: Sequence[DTO]) -> None:
     #     pass
     # async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
