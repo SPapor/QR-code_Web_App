@@ -12,8 +12,8 @@ class RepoBase[ID, Model]:
         self.serializer = serializer
 
     async def get_by_id(self, id_: ID) -> Model:
-        dto = self.crud.get_by_id(id_)
-        return await self.serializer.deserialize(dto)
+        dto = await self.crud.get_by_id(id_)
+        return self.serializer.deserialize(dto)
 
     async def create(self, model: Model) -> ID:
         dto = self.serializer.serialize(model)

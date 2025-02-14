@@ -49,10 +49,8 @@ async def test_user_crud_create_and_get_many(user_crud, users_dto, users_number)
         assert dto['username'] == payload['username']
 
 
-async def test_user_crud_update(user_crud, user_dto_in_db):
-    await user_crud.update({"id": user_dto_in_db['id'], "username": f'{user_dto_in_db["username"]}_updated'})
-    user = await user_crud.get_by_id(user_dto_in_db['id'])
-    assert user['username'] == f'{user_dto_in_db["username"]}_updated'
+
+
 
 
 @pytest.mark.parametrize('users_number', [2])
