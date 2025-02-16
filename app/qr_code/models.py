@@ -1,8 +1,10 @@
 import uuid
 from dataclasses import dataclass, field
 from uuid import UUID
+
 import qrcode
 from PIL import Image
+
 
 @dataclass(kw_only=True)
 class QrCode:
