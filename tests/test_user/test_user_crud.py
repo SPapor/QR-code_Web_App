@@ -33,6 +33,13 @@ async def test_user_crud_create_many(user_crud, users_dto, users_number):
     assert len(ids) == len(users_dto)
 
 
+async def test_user_crud_create_and_get(user_crud, user_dto):
+    dto = await user_crud.create_and_get(user_dto)
+    assert isinstance(dto, Mapping)
+    assert dto["id"] == user_dto["id"]
+    assert dto["username"] == user_dto["username"]
+
+
 @pytest.mark.parametrize('users_number', [2])
 async def test_user_crud_create_and_get_many(user_crud, users_dto, users_number):
     users = await user_crud.create_and_get_many(users_dto)
@@ -78,6 +85,7 @@ async def test_user_crud_count(user_crud, users_dto_in_db, users_number):
 
 @pytest.mark.parametrize('users_number', [0, 1, 2, 5, 10])
 async def test_user_crud_get_all(user_crud, users_dto_in_db, users_number):
-    assert len(await user_crud.get_all()) == users_number
-    for dto, dto_in_db in zip(await user_crud.get_all(), users_dto_in_db):
+    dtos = await user_crud.get_all()
+    assert len(dtos) == users_number
+    for dto, dto_in_db in zip(dtos, users_dto_in_db):
         assert dto['username'] == dto_in_db['username']
