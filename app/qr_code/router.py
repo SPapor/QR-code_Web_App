@@ -21,6 +21,7 @@ async def read_item(qr_code_id: UUID, qr_code_service: FromDishka[QrCodeService]
     image_bytes = image_io.getvalue()
     return Response(content=image_bytes, media_type="image/png")
 
+
 @router.get("/")
 async def get_all(qr_code_service: FromDishka[QrCodeService]):
     return await qr_code_service.get_all()
