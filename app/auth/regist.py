@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from passlib.context import CryptContext
 
 import jwt
+from passlib.context import CryptContext
 
 from core.settings import settings
 from user.models import User
-
 
 db = {}
 
@@ -20,43 +19,49 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def register(username:str, password:str):
+def register(username: str, password: str):
     password_hash = get_password_hash(password)
     user = User(username=username, password_hash=password_hash)
     db[str(user.id)] = user
 
     access_token = create_jwt_token({"user_id": str(user.id)}, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    refresh_token = create_jwt_token({"user_id": str(user.id)}, timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES))
+    refresh_token = create_jwt_token(
+        {"user_id": str(user.id)}, timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    )
     return access_token, refresh_token
 
 
-def login(username:str, password:str):
+def login(username: str, password: str):
     for user in db.values():
         if user.username == username:
             break
     else:
         raise ValueError("User not found")
-    is_authorized = verify_password(password,user.password_hash)
+    is_authorized = verify_password(password, user.password_hash)
     if not is_authorized:
         raise ValueError("Not authorized")
 
     access_token = create_jwt_token({"user_id": str(user.id)}, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    refresh_token = create_jwt_token({"user_id": str(user.id)}, timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES))
+    refresh_token = create_jwt_token(
+        {"user_id": str(user.id)}, timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    )
     return access_token, refresh_token
 
 
-def refresh(refresh_token:str):
+def refresh(refresh_token: str):
     payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     user_id = payload.get("user_id")
     if user_id is None:
         raise ValueError("Refresh token is not valid")
     user = db[user_id]
     access_token = create_jwt_token({"user_id": str(user.id)}, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    refresh_token = create_jwt_token({"user_id": str(user.id)}, timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES))
+    refresh_token = create_jwt_token(
+        {"user_id": str(user.id)}, timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    )
     return access_token, refresh_token
 
 
-def decode_access_token(access_token:str):
+def decode_access_token(access_token: str):
     payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     user_id = payload.get("user_id")
     if user_id is None:
@@ -64,7 +69,7 @@ def decode_access_token(access_token:str):
     return payload
 
 
-def create_jwt_token(data: dict, expires_delta: timedelta | None = None)->str:
+def create_jwt_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -73,6 +78,7 @@ def create_jwt_token(data: dict, expires_delta: timedelta | None = None)->str:
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
+
 
 #
 # register("asdasda","owei234")
