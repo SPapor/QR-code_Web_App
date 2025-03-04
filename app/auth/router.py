@@ -61,6 +61,7 @@ def set_refresh_token_cookie(response: Response, refresh_token: str):
         httponly=True,
         secure=True,
         samesite="strict",
+        path="auth/refresh",
         max_age=int(timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES).total_seconds()),
     )
     return response
