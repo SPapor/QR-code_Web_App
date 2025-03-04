@@ -5,6 +5,7 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
+from auth.dependencies import access_token_payload
 from core.database import ConnectionProvider, create_tables
 from core.providers import DataclassSerializerProvider
 from core.settings import settings
@@ -12,6 +13,7 @@ from qr_code.dal import QrCodeRepo
 from qr_code.models import QrCode
 from qr_code.providers import QrCodeProvider
 from qr_code.router import router as qr_code_router
+from auth.router import router as auth_router
 from user.dal import UserRepo
 from user.models import User
 from user.providers import UserProvider
@@ -25,7 +27,9 @@ container = make_async_container(
     QrCodeProvider(),
 )
 setup_dishka(container=container, app=app)
-app.include_router(qr_code_router)
+app.include_router(qr_code_router,prefix="/qr_code")
+app.include_router(auth_router,prefix="/auth")
+
 
 
 async def main():
@@ -34,7 +38,7 @@ async def main():
         user_repo = await request_container.get(UserRepo)
         qr_code_repo = await request_container.get(QrCodeRepo)
         session = await request_container.get(AsyncSession)
-        user = User(username="Batman")
+        user = User(username="Batman",password_hash="asdasdqw")
         qr_code = QrCode(user_id=user.id, name="Batman", link="https://coub.com/view/d4rmv")
         await user_repo.create(user)
         await qr_code_repo.create(qr_code)
@@ -42,4 +46,5 @@ async def main():
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    # asyncio.run(main())
+    print(access_token_payload(""))

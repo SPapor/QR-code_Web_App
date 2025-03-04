@@ -17,3 +17,7 @@ class QrCodeService:
 
     async def get_all(self) -> Sequence[QrCode]:
         return await self.qr_code_repo.get_all()
+
+    async def get_all_user_qr_codes(self, user_id:UUID)->Sequence[QrCode]:
+        return await self.qr_code_repo.get_all_user_qr_codes(user_id)
+
