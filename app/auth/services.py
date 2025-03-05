@@ -2,8 +2,9 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import jwt
-from jwt import DecodeError
+from jwt import DecodeError, ExpiredSignatureError
 from passlib.context import CryptContext
+from pydantic import BaseModel
 
 from auth.errors import NotAuthorizedError
 from core.settings import settings
@@ -11,6 +12,10 @@ from user.dal import UserRepo
 from user.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class AccessTokenPayload(BaseModel):
+    user_id: UUID
 
 
 class AuthService:
@@ -69,9 +74,16 @@ class AuthService:
         return encoded_jwt
 
     @staticmethod
-    def decode_jwt_token(self, token: str) -> dict:
+    def decode_jwt_token(token: str) -> dict:
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         except DecodeError:
             raise NotAuthorizedError
+        except ExpiredSignatureError:
+            raise NotAuthorizedError
         return payload
+
+    @staticmethod
+    def decode_access_token(token: str) -> AccessTokenPayload:
+        payload = AuthService.decode_jwt_token(token)
+        return AccessTokenPayload(user_id=UUID(payload["user_id"]))

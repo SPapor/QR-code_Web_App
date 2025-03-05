@@ -3,6 +3,7 @@ import pytest_asyncio
 from dishka import Provider, decorate, make_async_container
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from auth.providers import AuthProvider
 from core.database import ConnectionProvider, create_tables
 from core.providers import DataclassSerializerProvider
 from qr_code.providers import QrCodeProvider
@@ -23,6 +24,7 @@ async def container():
         DatabaseWithTablesProvider(),
         DataclassSerializerProvider(),
         UserProvider(),
+        AuthProvider(),
         QrCodeProvider(),
     )
     yield container
