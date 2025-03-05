@@ -3,7 +3,6 @@ from datetime import timedelta
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -15,12 +14,6 @@ from user.models import User
 
 router = APIRouter(route_class=DishkaRoute)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-
-class Token(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str
 
 
 @router.post("/register")
