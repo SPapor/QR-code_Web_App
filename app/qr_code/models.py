@@ -5,9 +5,11 @@ from uuid import UUID
 import qrcode
 from PIL import Image
 
+from core.models import Model
+
 
 @dataclass(kw_only=True)
-class QrCode:
+class QrCode(Model):
     id: UUID = field(default_factory=uuid.uuid4)
     user_id: UUID
     name: str
