@@ -6,7 +6,7 @@ import pytest_asyncio
 
 from core.serializer import Serializer
 from core.types import DTO
-from user.dao import UserCrud, UserRepo
+from user.dal import UserCrud, UserRepo
 from user.models import User
 
 
