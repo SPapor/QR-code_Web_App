@@ -38,7 +38,7 @@ class RepoBase[ID, MODEL: Model](metaclass=RepoMeta):
         self.serializer = serializer
         self.entity_cls = entity_cls
 
-    async def get_by_id(self, id_: ID) -> MODEL | None:
+    async def get_by_id(self, id_: ID) -> MODEL:
         dto = await self.crud.get_by_id(id_)
         return self.serializer.deserialize(dto)
 
