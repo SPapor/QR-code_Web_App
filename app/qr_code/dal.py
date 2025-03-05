@@ -23,7 +23,7 @@ class QrCodeRepo(RepoBase[UUID, QrCode]):
     crud: QrCodeCrud
 
     def __init__(self, crud: QrCodeCrud, serializer: Serializer[QrCode, DTO]):
-        super().__init__(crud, serializer)
+        super().__init__(crud, serializer, QrCode)
 
     async def get_all_user_qr_codes(self, user_id: UUID) -> Sequence[QrCode]:
         qr_code = await self.crud.get_all_user_qr_codes(user_id)

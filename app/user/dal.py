@@ -22,7 +22,7 @@ class UserRepo(RepoBase[UUID, User]):
     crud: UserCrud
 
     def __init__(self, crud: UserCrud, serializer: Serializer[User, DTO]):
-        super().__init__(crud, serializer)
+        super().__init__(crud, serializer, User)
 
     async def get_by_username(self, username: str) -> User | None:
         dto = await self.crud.get_by_username(username)
