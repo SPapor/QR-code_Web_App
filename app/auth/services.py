@@ -21,8 +21,6 @@ class AccessTokenPayload(BaseModel):
 class AuthService:
     def __init__(self, user_repo: UserRepo):
         self.user_repo = user_repo
-        self.access_token_exp = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        self.refresh_token_exp = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
 
     async def register(self, username: str, password: str) -> tuple[User, tuple[str, str]]:
         password_hash = self.get_password_hash(password)
@@ -50,8 +48,12 @@ class AuthService:
         return token_pair
 
     def create_access_refresh_token_pait(self, user: User):
-        access_token = self.create_jwt_token({"user_id": str(user.id)}, self.access_token_exp)
-        refresh_token = self.create_jwt_token({"user_id": str(user.id)}, self.refresh_token_exp)
+        access_token_exp = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = self.create_jwt_token({"user_id": str(user.id)}, access_token_exp)
+
+        refresh_token_exp = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+        refresh_token = self.create_jwt_token({"user_id": str(user.id)}, refresh_token_exp)
+
         return access_token, refresh_token
 
     @staticmethod
