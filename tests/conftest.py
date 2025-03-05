@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from core.database import ConnectionProvider, create_tables
 from core.providers import DataclassSerializerProvider
+from qr_code.providers import QrCodeProvider
 from user.providers import UserProvider
 
 
@@ -22,6 +23,7 @@ async def container():
         DatabaseWithTablesProvider(),
         DataclassSerializerProvider(),
         UserProvider(),
+        QrCodeProvider(),
     )
     yield container
     await container.close()
