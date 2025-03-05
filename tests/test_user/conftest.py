@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
+from auth.regist import get_password_hash
 from core.serializer import Serializer
 from core.types import DTO
 from user.dal import UserCrud, UserRepo
@@ -25,9 +26,19 @@ async def user_repo(request_container) -> UserRepo:
     return await request_container.get(UserRepo)
 
 
+@pytest.fixture(scope="session")
+def password() -> str:
+    return "password"
+
+
+@pytest.fixture(scope="session")
+def password_hash() -> str:
+    return get_password_hash("password")
+
+
 @pytest.fixture
-def users_dto(users_number) -> list[Mapping[str, Any]]:
-    return [{"id": uuid4(), "username": f"test_user_{i}"} for i in range(users_number)]
+def users_dto(users_number, password_hash) -> list[Mapping[str, Any]]:
+    return [{"id": uuid4(), "username": f"test_user_{i}", "password_hash": password_hash} for i in range(users_number)]
 
 
 @pytest.fixture
@@ -52,10 +63,10 @@ async def users_dto_in_db(user_crud, users_dto) -> Sequence[Mapping[str, Any]]:
 
 
 @pytest.fixture
-def user() -> User:
-    return User(id=uuid4(), username="test_user")
+def user(password_hash) -> User:
+    return User(id=uuid4(), username="test_user", password_hash=password_hash)
 
 
 @pytest.fixture
-def users(users_number) -> list[User]:
-    return [User(id=uuid4(), username=f"test_user_{i}") for i in range(users_number)]
+def users(users_number, password_hash) -> list[User]:
+    return [User(id=uuid4(), username=f"test_user_{i}", password_hash=password_hash) for i in range(users_number)]

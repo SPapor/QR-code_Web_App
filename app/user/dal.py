@@ -27,5 +27,5 @@ class UserRepo(RepoBase[UUID, User]):
     async def get_by_username(self, username: str) -> User | None:
         dto = await self.crud.get_by_username(username)
         if dto is None:
-            raise self.entity_cls.NotFoundException
+            raise self.entity_cls.NotFoundError
         return self.serializer.deserialize(dto)  # noqa
