@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
@@ -31,20 +32,27 @@ app.include_router(qr_code_router, prefix="/qr_code")
 app.include_router(auth_router, prefix="/auth")
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await container.close()
+
+
 async def main():
     await create_tables(await container.get(AsyncEngine))
     async with container() as request_container:
         user_repo = await request_container.get(UserRepo)
         qr_code_repo = await request_container.get(QrCodeRepo)
         session = await request_container.get(AsyncSession)
+
         password_hash = get_password_hash('asd')
         user = User(username="Batman", password_hash=password_hash)
-        qr_code = QrCode(user_id=user.id, name="Batman", link="https://coub.com/view/d4rmv")
         await user_repo.create(user)
-        await qr_code_repo.create(qr_code)
-        await session.commit()
+        # qr_code = QrCode(user_id=user.id, name="Batman", link="https://coub.com/view/d4rmv")
+        # await user_repo.create(user)
+        # await qr_code_repo.create(qr_code)
+        # await session.commit()
 
 
 if __name__ == '__main__':
     asyncio.run(main())
-    # print(access_token_payload(""))

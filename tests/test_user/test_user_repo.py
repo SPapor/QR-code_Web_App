@@ -38,19 +38,22 @@ async def test_user_repo_create_and_get_many(user_repo, users, users_number):
 
 
 async def test_user_repo_update(user_repo, user_dto_in_db):
-    await user_repo.update(User(id=user_dto_in_db['id'], username=f"{user_dto_in_db["username"]}_update"))
+    new_data = {**user_dto_in_db, 'username': f"{user_dto_in_db["username"]}_update"}
+    await user_repo.update(User(**new_data))
     user = await user_repo.get_by_id(user_dto_in_db['id'])
     assert user.username == f"{user_dto_in_db["username"]}_update"
 
 
 @pytest.mark.parametrize('users_number', [2])
 async def test_user_repo_update_many(user_repo, users_dto_in_db, users_number):
-    payload = [User(id=dto["id"], username=dto["username"]) for dto in users_dto_in_db]
+    new_data = [{**dto, 'username': f"{dto["username"]}_update"} for dto in users_dto_in_db]
+    payload = [User(**d) for d in new_data]
+    payload = sorted(payload, key=lambda x: x.id)
     await user_repo.update_many(payload)
+
     users = await user_repo.get_many_by_ids([dto['id'] for dto in users_dto_in_db])
-    payload = sorted(users_dto_in_db, key=lambda x: x['id'])
     for user, payload in zip(users, payload):
-        assert user.username == payload["username"]
+        assert user.username == payload.username
 
 
 @pytest.mark.parametrize('users_number', [2])
@@ -66,8 +69,8 @@ async def test_user_repo_get_many_by_ids(user_repo, users_dto_in_db, users_numbe
 
 async def test_user_repo_delete(user_repo, user_dto_in_db):
     await user_repo.delete(user_dto_in_db['id'])
-    user = await user_repo.get_by_id(user_dto_in_db['id'])
-    assert user is None
+    with pytest.raises(User.NotFoundError):
+        await user_repo.get_by_id(user_dto_in_db['id'])
 
 
 @pytest.mark.parametrize('users_number', [2])

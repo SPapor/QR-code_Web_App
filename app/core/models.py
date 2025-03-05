@@ -1,11 +1,11 @@
-from typing import ClassVar, Callable
+from typing import ClassVar, Callable, Type
 
 from core import errors
 
 
 class Model:
-    NotFoundException: ClassVar[Callable[[], errors.NotFoundError]]
-    AlreadyExistError: ClassVar[Callable[[], errors.AlreadyExistError]]
+    NotFoundError: ClassVar[Type[errors.NotFoundError]]
+    AlreadyExistError: ClassVar[Type[errors.AlreadyExistError]]
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -16,7 +16,7 @@ class Model:
 
             __qualname__ = f"{cls.__qualname__}.NotFoundError"
 
-        cls.NotFoundException = NotFoundError
+        cls.NotFoundError = NotFoundError
 
         class AlreadyExistError(errors.AlreadyExistError):
             def __init__(self):

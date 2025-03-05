@@ -16,7 +16,7 @@ def handle_exceptions(func):
         try:
             return await func(self, *args, **kwargs)
         except sqlalchemy.exc.NoResultFound:
-            raise self.entity_cls.NotFoundException
+            raise self.entity_cls.NotFoundError
         except sqlalchemy.exc.IntegrityError:
             raise self.entity_cls.AlreadyExistError
 
