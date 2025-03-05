@@ -12,8 +12,8 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from auth.services import AuthService
 from core.settings import settings
-from user.services import UserService
 
 router = APIRouter(route_class=DishkaRoute)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -27,28 +27,28 @@ class Token(BaseModel):
 
 @router.post("/register")
 async def register(
-    username: str, password: str, session: FromDishka[AsyncSession], user_service: FromDishka[UserService]
+    username: str, password: str, session: FromDishka[AsyncSession], auth_service: FromDishka[AuthService]
 ):
-    user, token_pair = await user_service.register(username, password)
+    user, token_pair = await auth_service.register(username, password)
     await session.commit()
     return token_pair
 
 
 @router.post("/login")
-async def login(user_service: FromDishka[UserService], form_data: OAuth2PasswordRequestForm = Depends()):
-    access_token, refresh_token = await user_service.login(form_data.username, form_data.password)
+async def login(auth_service: FromDishka[AuthService], form_data: OAuth2PasswordRequestForm = Depends()):
+    access_token, refresh_token = await auth_service.login(form_data.username, form_data.password)
     response = JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
     set_refresh_token_cookie(response, refresh_token)
     return response
 
 
 @router.post("/refresh")
-async def refresh(request: Request, user_service: FromDishka[UserService]):
+async def refresh(request: Request, auth_service: FromDishka[AuthService]):
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise HTTPException(status_code=401, detail="No refresh token found")
 
-    refresh_token, access_token = await user_service.refresh(refresh_token)
+    refresh_token, access_token = await auth_service.refresh(refresh_token)
     response = JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
     set_refresh_token_cookie(response, refresh_token)
     return refresh_token, access_token
