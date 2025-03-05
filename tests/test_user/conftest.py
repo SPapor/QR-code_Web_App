@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from auth.regist import get_password_hash
+from auth.services import get_password_hash
 from core.serializer import Serializer
 from core.types import DTO
 from user.dal import UserCrud, UserRepo
@@ -32,8 +32,8 @@ def password() -> str:
 
 
 @pytest.fixture(scope="session")
-def password_hash() -> str:
-    return get_password_hash("password")
+def password_hash(password) -> str:
+    return get_password_hash(password)
 
 
 @pytest.fixture
