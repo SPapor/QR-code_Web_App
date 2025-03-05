@@ -6,13 +6,13 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from auth.regist import get_password_hash
+from auth.providers import AuthProvider
 from auth.router import router as auth_router
+from auth.services import AuthService
 from core.database import ConnectionProvider, create_tables
 from core.providers import DataclassSerializerProvider
 from core.settings import settings
 from qr_code.dal import QrCodeRepo
-from qr_code.models import QrCode
 from qr_code.providers import QrCodeProvider
 from qr_code.router import router as qr_code_router
 from user.dal import UserRepo
@@ -25,6 +25,7 @@ container = make_async_container(
     ConnectionProvider(f"sqlite+aiosqlite:///./{settings.db_name}"),
     DataclassSerializerProvider(),
     UserProvider(),
+    AuthProvider(),
     QrCodeProvider(),
 )
 setup_dishka(container=container, app=app)
@@ -45,7 +46,7 @@ async def main():
         qr_code_repo = await request_container.get(QrCodeRepo)
         session = await request_container.get(AsyncSession)
 
-        password_hash = get_password_hash('asd')
+        password_hash = AuthService.get_password_hash('asd')
         user = User(username="Batman", password_hash=password_hash)
         await user_repo.create(user)
         # qr_code = QrCode(user_id=user.id, name="Batman", link="https://coub.com/view/d4rmv")

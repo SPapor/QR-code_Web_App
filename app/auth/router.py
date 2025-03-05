@@ -27,7 +27,7 @@ class Token(BaseModel):
 
 @router.post("/register")
 async def register(
-    username: str, password: str, session: FromDishka[AsyncSession], auth_service: FromDishka[AuthService]
+    username: str, password: str, auth_service: FromDishka[AuthService], session: FromDishka[AsyncSession]
 ):
     user, token_pair = await auth_service.register(username, password)
     await session.commit()
