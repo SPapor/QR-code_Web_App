@@ -11,6 +11,7 @@ from starlette.responses import JSONResponse, Response
 
 from auth.services import AuthService
 from core.settings import settings
+from user.services import UserService
 
 router = APIRouter(route_class=DishkaRoute)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -24,9 +25,15 @@ class Token(BaseModel):
 
 @router.post("/register")
 async def register(
-    username: str, password: str, auth_service: FromDishka[AuthService], session: FromDishka[AsyncSession]
+    username: str,
+    password: str,
+    auth_service: FromDishka[AuthService],
+    user_service: FromDishka[UserService],
+    session: FromDishka[AsyncSession]
 ):
-    user, token_pair = await auth_service.register(username, password)
+    password_hash = auth_service.get_password_hash(password)
+    user = await user_service.register(username, password_hash)
+    token_pair = auth_service.create_access_refresh_token_pair(user)
     await session.commit()
     return token_pair
 

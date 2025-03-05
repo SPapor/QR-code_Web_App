@@ -22,12 +22,6 @@ class AuthService:
     def __init__(self, user_repo: UserRepo):
         self.user_repo = user_repo
 
-    async def register(self, username: str, password: str) -> tuple[User, tuple[str, str]]:
-        password_hash = self.get_password_hash(password)
-        user = User(username=username, password_hash=password_hash)
-        user = await self.user_repo.create_and_get(user)
-        token_pair = self.create_access_refresh_token_pait(user)
-        return user, token_pair
 
     async def login(self, username: str, password: str):
         user = await self.user_repo.get_by_username(username)
@@ -35,7 +29,7 @@ class AuthService:
         if not is_authorized:
             raise NotAuthorizedError
 
-        token_pair = self.create_access_refresh_token_pait(user)
+        token_pair = self.create_access_refresh_token_pair(user)
         return token_pair
 
     async def refresh(self, refresh_token: str):
@@ -44,10 +38,10 @@ class AuthService:
         if user_id is None:
             raise NotAuthorizedError
         user = await self.user_repo.get_by_id(UUID(user_id))
-        token_pair = self.create_access_refresh_token_pait(user)
+        token_pair = self.create_access_refresh_token_pair(user)
         return token_pair
 
-    def create_access_refresh_token_pait(self, user: User):
+    def create_access_refresh_token_pair(self, user: User):
         access_token_exp = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = self.create_jwt_token({"user_id": str(user.id)}, access_token_exp)
 
