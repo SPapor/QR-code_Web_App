@@ -4,8 +4,6 @@ from uuid import UUID
 import pytest
 import sqlalchemy
 
-from user.models import User
-
 
 async def test_user_crud_create(user_crud, user_dto):
     id_ = await user_crud.create(user_dto)

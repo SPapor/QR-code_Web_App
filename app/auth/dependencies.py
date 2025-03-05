@@ -5,16 +5,15 @@ from dishka.integrations.fastapi import inject
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from auth.services import AuthService, AccessTokenPayload
+from auth.services import AccessTokenPayload, AuthService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 @inject
 async def access_token_payload(
-    auth_service: FromDishka[AuthService],
-    token: str = Depends(oauth2_scheme)
- ) -> AccessTokenPayload:
+    auth_service: FromDishka[AuthService], token: str = Depends(oauth2_scheme)
+) -> AccessTokenPayload:
     return auth_service.decode_access_token(token)
 
 

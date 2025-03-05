@@ -6,6 +6,9 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
+import auth.errors
+import core.errors
+import user.errors
 from auth.providers import AuthProvider
 from auth.router import router as auth_router
 from auth.services import AuthService
@@ -32,6 +35,10 @@ setup_dishka(container=container, app=app)
 app.include_router(qr_code_router, prefix="/qr_code")
 app.include_router(auth_router, prefix="/auth")
 
+auth.errors.register_exception_handlers(app)
+core.errors.register_exception_handlers(app)
+user.errors.register_exception_handlers(app)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,8 +50,8 @@ async def main():
     await create_tables(await container.get(AsyncEngine))
     async with container() as request_container:
         user_repo = await request_container.get(UserRepo)
-        qr_code_repo = await request_container.get(QrCodeRepo)
-        session = await request_container.get(AsyncSession)
+        await request_container.get(QrCodeRepo)
+        await request_container.get(AsyncSession)
 
         password_hash = AuthService.get_password_hash('asd')
         user = User(username="Batman", password_hash=password_hash)
