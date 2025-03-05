@@ -22,6 +22,12 @@ class AuthService:
     def __init__(self, user_repo: UserRepo):
         self.user_repo = user_repo
 
+    async def register(self, username: str, password: str) -> tuple[User, tuple[str, str]]:
+        password_hash = self.get_password_hash(password)
+        user = User(username=username, password_hash=password_hash)
+        user = await self.user_repo.create_and_get(user)
+        token_pair = self.create_access_refresh_token_pair(user)
+        return user, token_pair
 
     async def login(self, username: str, password: str):
         user = await self.user_repo.get_by_username(username)

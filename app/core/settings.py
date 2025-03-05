@@ -11,5 +11,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     db_name: str = 'database.sqlite'
 
+    ADMIN_USERNAME: str = 'q'
+    ADMIN_PASSWORD: str = 'q'
 
-settings = Settings()
+
+settings = Settings()  # noqa

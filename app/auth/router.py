@@ -11,7 +11,7 @@ from starlette.responses import JSONResponse, Response
 
 from auth.services import AuthService
 from core.settings import settings
-from user.services import UserService
+from user.models import User
 
 router = APIRouter(route_class=DishkaRoute)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -28,19 +28,19 @@ async def register(
     username: str,
     password: str,
     auth_service: FromDishka[AuthService],
-    user_service: FromDishka[UserService],
     session: FromDishka[AsyncSession]
 ):
-    password_hash = auth_service.get_password_hash(password)
-    user = await user_service.register(username, password_hash)
-    token_pair = auth_service.create_access_refresh_token_pair(user)
+    user, token_pair = await auth_service.register(username, password)
     await session.commit()
     return token_pair
 
 
 @router.post("/login")
 async def login(auth_service: FromDishka[AuthService], form_data: OAuth2PasswordRequestForm = Depends()):
-    access_token, refresh_token = await auth_service.login(form_data.username, form_data.password)
+    try:
+        access_token, refresh_token = await auth_service.login(form_data.username, form_data.password)
+    except User.NotFoundError:
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
     response = JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
     set_refresh_token_cookie(response, refresh_token)
     return response
