@@ -1,9 +1,6 @@
 from datetime import timedelta
 
-from dishka.integrations.fastapi import (
-    DishkaRoute,
-    FromDishka,
-)
+from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel

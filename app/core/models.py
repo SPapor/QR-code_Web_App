@@ -1,4 +1,4 @@
-from typing import ClassVar, Callable, Type
+from typing import ClassVar, Type
 
 from core import errors
 
