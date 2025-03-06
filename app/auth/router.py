@@ -3,55 +3,31 @@ from datetime import timedelta
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse
 
 from auth.services import AuthService
 from core.settings import settings
-from user.models import User
 
 router = APIRouter(route_class=DishkaRoute)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
-@router.post("/register")
-async def register(
-    username: str,
-    password: str,
-    auth_service: FromDishka[AuthService],
-    session: FromDishka[AsyncSession]
-):
-    user, token_pair = await auth_service.register(username, password)
-    await session.commit()
-    return token_pair
-
-
 @router.post("/login")
 async def login(auth_service: FromDishka[AuthService], form_data: OAuth2PasswordRequestForm = Depends()):
-    try:
-        access_token, refresh_token = await auth_service.login(form_data.username, form_data.password)
-    except User.NotFoundError:
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-    response = JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
-    set_refresh_token_cookie(response, refresh_token)
-    return response
+    access_token, refresh_token = await auth_service.login(form_data.username, form_data.password)
+    return token_pair_to_response(access_token, refresh_token)
 
 
 @router.post("/refresh")
 async def refresh(request: Request, auth_service: FromDishka[AuthService]):
     refresh_token = request.cookies.get("refresh_token")
-    if not refresh_token:
-        raise HTTPException(status_code=401, detail="No refresh token found")
-
     refresh_token, access_token = await auth_service.refresh(refresh_token)
-    response = JSONResponse(content={"access_token": access_token, "token_type": "bearer"})
-    set_refresh_token_cookie(response, refresh_token)
-    return refresh_token, access_token
+    return token_pair_to_response(access_token, refresh_token)
 
 
-def set_refresh_token_cookie(response: Response, refresh_token: str):
+def token_pair_to_response(access_token: str, refresh_token: str):
+    response = JSONResponse(content={'access_token': access_token, "token_type": "bearer"})
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,

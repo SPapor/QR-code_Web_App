@@ -1,16 +1,16 @@
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from dishka import make_async_container, Scope
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from starlette.middleware.cors import CORSMiddleware
 
 import auth.errors
 import core.errors
 import user.errors
 from auth.providers import AuthProvider
 from auth.router import router as auth_router
-from auth.services import AuthService
 from core.database import ConnectionProvider, create_tables
 from core.providers import DataclassSerializerProvider
 from core.settings import settings
@@ -18,28 +18,35 @@ from qr_code.providers import QrCodeProvider
 from qr_code.router import router as qr_code_router
 from user.models import User
 from user.providers import UserProvider
+from user.services import UserService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_tables(await container.get(AsyncEngine))
+    async with container(scope=Scope.REQUEST) as request_container:
+        await create_tables(await container.get(AsyncEngine))
+        user_service = await request_container.get(UserService)
+        session = await request_container.get(AsyncSession)
 
-    if settings.ADMIN_USERNAME is not None and settings.ADMIN_PASSWORD is not None:
-        async with container(scope=Scope.REQUEST) as request_container:
-            auth_service = await request_container.get(AuthService)
-            session = await request_container.get(AsyncSession)
-            try:
-                await auth_service.register(settings.ADMIN_USERNAME, settings.ADMIN_PASSWORD)
-            except User.AlreadyExistError:
-                pass
-            else:
-                await session.commit()
+        if settings.ADMIN_USERNAME is not None and settings.ADMIN_PASSWORD is not None:
+            with suppress(User.AlreadyExistError):
+                await user_service.register(settings.ADMIN_USERNAME, settings.ADMIN_PASSWORD)
+
+        await session.commit()
 
     yield
     await container.close()
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,  # noqa
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 container = make_async_container(
     ConnectionProvider(f"sqlite+aiosqlite:///./{settings.db_name}"),
