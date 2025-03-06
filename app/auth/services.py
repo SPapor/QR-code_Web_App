@@ -1,59 +1,67 @@
+import dataclasses
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import jwt
+from fastapi.encoders import jsonable_encoder
 from jwt import DecodeError, ExpiredSignatureError
 from passlib.context import CryptContext
-from pydantic import BaseModel
 
-from auth.errors import NotAuthorizedError
+from auth.dal import AuthRepo
+from auth.errors import NotAuthorizedError, RefreshTokenRequiredError, InvalidLoginOrPasswordError
+from auth.models import Auth
 from core.settings import settings
-from user.dal import UserRepo
-from user.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class AccessTokenPayload(BaseModel):
+@dataclass
+class AccessTokenPayload:
     user_id: UUID
+    username: str
 
 
 class AuthService:
-    def __init__(self, user_repo: UserRepo):
-        self.user_repo = user_repo
+    def __init__(self, auth_repo: AuthRepo):
+        self.auth_repo = auth_repo
 
-    async def register(self, username: str, password: str) -> tuple[User, tuple[str, str]]:
+    async def create_auth(self, user_id: UUID, username: str, password: str) -> Auth:
         password_hash = self.get_password_hash(password)
-        user = User(username=username, password_hash=password_hash)
-        user = await self.user_repo.create_and_get(user)
-        token_pair = self.create_access_refresh_token_pair(user)
-        return user, token_pair
+        auth = Auth(user_id=user_id, username=username, password_hash=password_hash)
+        auth = await self.auth_repo.create_and_get(auth)
+        return auth
 
     async def login(self, username: str, password: str):
-        user = await self.user_repo.get_by_username(username)
-        is_authorized = self.verify_password(password, user.password_hash)
-        if not is_authorized:
-            raise NotAuthorizedError
+        try:
+            user = await self.auth_repo.get_by_username(username)
+        except Auth.NotFoundError:
+            raise InvalidLoginOrPasswordError
+
+        if not self.verify_password(password, user.password_hash):
+            raise InvalidLoginOrPasswordError
 
         token_pair = self.create_access_refresh_token_pair(user)
         return token_pair
 
-    async def refresh(self, refresh_token: str):
+    async def refresh(self, refresh_token: str | None):
+        if not refresh_token:
+            raise RefreshTokenRequiredError
         payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id = payload.get("user_id")
         if user_id is None:
             raise NotAuthorizedError
-        user = await self.user_repo.get_by_id(UUID(user_id))
+        user = await self.auth_repo.get_by_id(UUID(user_id))
         token_pair = self.create_access_refresh_token_pair(user)
         return token_pair
 
-    def create_access_refresh_token_pair(self, user: User):
+    def create_access_refresh_token_pair(self, auth: Auth):
         access_token_exp = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = self.create_jwt_token({"user_id": str(user.id)}, access_token_exp)
+        at_payload = dataclasses.asdict(AccessTokenPayload(user_id=auth.user_id, username=auth.username))  # noqa
+        access_token = self.create_jwt_token(jsonable_encoder(at_payload), access_token_exp)
 
         refresh_token_exp = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
-        refresh_token = self.create_jwt_token({"user_id": str(user.id)}, refresh_token_exp)
-
+        refresh_token = self.create_jwt_token({"user_id": str(auth.user_id)}, refresh_token_exp)
         return access_token, refresh_token
 
     @staticmethod
@@ -88,4 +96,4 @@ class AuthService:
     @staticmethod
     def decode_access_token(token: str) -> AccessTokenPayload:
         payload = AuthService.decode_jwt_token(token)
-        return AccessTokenPayload(user_id=UUID(payload["user_id"]))
+        return AccessTokenPayload(user_id=UUID(payload["user_id"]), username=payload["username"])
