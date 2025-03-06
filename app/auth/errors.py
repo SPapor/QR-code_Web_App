@@ -15,3 +15,7 @@ class InvalidLoginOrPasswordError(AuthError):
 
 class RefreshTokenRequiredError(AuthError):
     pass
+
+
+class AdminRightsRequiredError(AuthError):
+    pass

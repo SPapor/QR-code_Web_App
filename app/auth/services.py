@@ -20,6 +20,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class AccessTokenPayload:
     user_id: UUID
     username: str
+    is_admin: bool = False
 
 
 class AuthService:
@@ -57,7 +58,8 @@ class AuthService:
 
     def create_access_refresh_token_pair(self, auth: Auth):
         access_token_exp = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        at_payload = dataclasses.asdict(AccessTokenPayload(user_id=auth.user_id, username=auth.username))  # noqa
+        payload = AccessTokenPayload(user_id=auth.user_id, username=auth.username, is_admin=auth.is_admin)
+        at_payload = dataclasses.asdict(payload)  # noqa
         access_token = self.create_jwt_token(jsonable_encoder(at_payload), access_token_exp)
 
         refresh_token_exp = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
