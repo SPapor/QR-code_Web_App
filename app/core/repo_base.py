@@ -17,8 +17,13 @@ def handle_exceptions(func):
             return await func(self, *args, **kwargs)
         except sqlalchemy.exc.NoResultFound:
             raise self.entity_cls.NotFoundError
-        except sqlalchemy.exc.IntegrityError:
-            raise self.entity_cls.AlreadyExistError
+        except sqlalchemy.exc.IntegrityError as e:
+            error_message = str(e)
+            match error_message:
+                case msg if msg.startswith('(sqlite3.IntegrityError) UNIQUE constraint failed:'):
+                    raise self.entity_cls.AlreadyExistError
+                case _:
+                    raise
 
     wrapper.__handle_exceptions__ = True
     return wrapper
