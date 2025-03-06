@@ -6,9 +6,11 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from starlette.middleware.cors import CORSMiddleware
 
+import auth.api_errors
 import auth.errors
+import core.api_errors
 import core.errors
-import user.errors
+import user.api_errors
 from auth.providers import AuthProvider
 from auth.router import router as auth_router
 from core.database import ConnectionProvider, create_tables
@@ -59,6 +61,6 @@ setup_dishka(container=container, app=app)
 app.include_router(qr_code_router, prefix="/qr_code")
 app.include_router(auth_router, prefix="/auth")
 
-auth.errors.register_exception_handlers(app)
-core.errors.register_exception_handlers(app)
-user.errors.register_exception_handlers(app)
+auth.api_errors.register_exception_handlers(app)
+core.api_errors.register_exception_handlers(app)
+user.api_errors.register_exception_handlers(app)
