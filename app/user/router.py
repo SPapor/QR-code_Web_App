@@ -1,6 +1,8 @@
+from typing import Annotated
+
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.router import token_pair_to_response
@@ -11,8 +13,8 @@ router = APIRouter(route_class=DishkaRoute)
 
 @router.post("/register")
 async def register(
-    username: str,
-    password: str,
+    username: Annotated[str, Body()],
+    password: Annotated[str, Body()],
     user_service: FromDishka[UserService],
     session: FromDishka[AsyncSession]
 ):
