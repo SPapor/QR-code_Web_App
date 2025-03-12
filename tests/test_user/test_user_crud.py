@@ -2,6 +2,7 @@ from typing import Mapping
 from uuid import UUID
 
 import pytest
+import sqlalchemy
 
 
 async def test_user_crud_create(user_crud, user_dto):
@@ -67,8 +68,8 @@ async def test_user_crud_update_many(user_crud, users_dto_in_db, users_number):
 
 async def test_user_crud_delete(user_crud, user_dto_in_db):
     await user_crud.delete(user_dto_in_db['id'])
-    user = await user_crud.get_by_id(user_dto_in_db['id'])
-    assert user is None
+    with pytest.raises(sqlalchemy.exc.NoResultFound):
+        await user_crud.get_by_id(user_dto_in_db['id'])
 
 
 @pytest.mark.parametrize('users_number', [2])

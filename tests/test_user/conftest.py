@@ -8,6 +8,12 @@ from core.serializer import Serializer
 from core.types import DTO
 from user.dal import UserCrud, UserRepo
 from user.models import User
+from user.services import UserService
+
+
+@pytest_asyncio.fixture
+async def user_service(request_container) -> UserService:
+    return await request_container.get(UserService)
 
 
 @pytest_asyncio.fixture
@@ -52,8 +58,13 @@ async def users_dto_in_db(user_crud, users_dto) -> Sequence[Mapping[str, Any]]:
 
 
 @pytest.fixture
-def user() -> User:
-    return User(id=uuid4(), username="test_user")
+def username():
+    return "test_user"
+
+
+@pytest.fixture
+def user(username) -> User:
+    return User(id=uuid4(), username=username)
 
 
 @pytest.fixture

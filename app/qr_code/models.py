@@ -5,9 +5,12 @@ from uuid import UUID
 import qrcode
 from PIL import Image
 
+from core.models import Model
+from core.settings import settings
+
 
 @dataclass(kw_only=True)
-class QrCode:
+class QrCode(Model):
     id: UUID = field(default_factory=uuid.uuid4)
     user_id: UUID
     name: str
@@ -20,7 +23,7 @@ class QrCode:
             box_size=10,
             border=4,
         )
-        qr.add_data(self.link)
+        qr.add_data(settings.API_URL + settings.QR_CODE_ENDPOINT.format(uuid=self.id))
         qr.make(fit=True)
         img = qr.make_image(fill="black", back_color="white")
         return img
