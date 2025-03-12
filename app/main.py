@@ -11,6 +11,7 @@ import auth.api_errors
 import auth.errors
 import core.api_errors
 import core.errors
+import qr_code.api_errors
 import user.api_errors
 from auth.providers import AuthProvider
 from auth.router import router as auth_router
@@ -59,8 +60,9 @@ def create_app():
     app.include_router(user_router, prefix="/user")
 
     auth.api_errors.register_exception_handlers(app)
-    core.api_errors.register_exception_handlers(app)
     user.api_errors.register_exception_handlers(app)
+    qr_code.api_errors.register_exception_handlers(app)
+    core.api_errors.register_exception_handlers(app)
     return app
 
 
