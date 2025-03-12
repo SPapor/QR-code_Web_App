@@ -18,7 +18,6 @@ class AuthCrud(CrudBase[UUID, DTO]):
         return res.mappings().one()
 
 
-
 class AuthRepo(RepoBase[UUID, Auth]):
     crud: AuthCrud
 

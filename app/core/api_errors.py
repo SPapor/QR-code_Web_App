@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from starlette import status
 from starlette.responses import JSONResponse
 
-from core.errors import ApplicationError, NotFoundError, AlreadyExistError
+from core.errors import AlreadyExistError, ApplicationError, NotFoundError
 
 
 @dataclass

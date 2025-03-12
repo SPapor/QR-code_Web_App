@@ -1,7 +1,7 @@
 import functools
 from contextlib import asynccontextmanager, suppress
 
-from dishka import make_async_container, Scope, AsyncContainer
+from dishka import AsyncContainer, Scope, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -19,9 +19,9 @@ from core.providers import DataclassSerializerProvider
 from core.settings import settings
 from qr_code.providers import QrCodeProvider
 from qr_code.router import router as qr_code_router
-from user.router import router as user_router
 from user.models import User
 from user.providers import UserProvider
+from user.router import router as user_router
 from user.services import UserService
 
 

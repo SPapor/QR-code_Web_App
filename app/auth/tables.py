@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Table, UUID, String, Boolean
+from sqlalchemy import UUID, Boolean, Column, String, Table
 
 from core.database import metadata
 

@@ -16,7 +16,7 @@ async def register(
     username: Annotated[str, Body()],
     password: Annotated[str, Body()],
     user_service: FromDishka[UserService],
-    session: FromDishka[AsyncSession]
+    session: FromDishka[AsyncSession],
 ):
     access_token, refresh_token = await user_service.register(username, password)
     await session.commit()

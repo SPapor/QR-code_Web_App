@@ -2,8 +2,11 @@ from fastapi import FastAPI
 from starlette import status
 
 from auth.errors import (
-    AuthError, NotAuthorizedError, RefreshTokenRequiredError, InvalidLoginOrPasswordError,
     AdminRightsRequiredError,
+    AuthError,
+    InvalidLoginOrPasswordError,
+    NotAuthorizedError,
+    RefreshTokenRequiredError,
 )
 from core.api_errors import ApiError, static_exception_handler
 

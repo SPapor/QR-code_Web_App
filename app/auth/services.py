@@ -9,7 +9,7 @@ from jwt import DecodeError, ExpiredSignatureError
 from passlib.context import CryptContext
 
 from auth.dal import AuthRepo
-from auth.errors import NotAuthorizedError, RefreshTokenRequiredError, InvalidLoginOrPasswordError
+from auth.errors import InvalidLoginOrPasswordError, NotAuthorizedError, RefreshTokenRequiredError
 from auth.models import Auth
 from core.settings import settings
 

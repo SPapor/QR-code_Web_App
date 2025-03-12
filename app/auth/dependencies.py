@@ -21,6 +21,7 @@ async def access_token_payload(
 def logged_in_user_id(payload: AccessTokenPayload = Depends(access_token_payload)) -> UUID:
     return payload.user_id
 
+
 def logged_in_admin_id(payload: AccessTokenPayload = Depends(access_token_payload)) -> UUID:
     if not payload.is_admin:
         raise AdminRightsRequiredError
