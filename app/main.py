@@ -1,6 +1,7 @@
+import functools
 from contextlib import asynccontextmanager, suppress
 
-from dishka import make_async_container, Scope
+from dishka import make_async_container, Scope, AsyncContainer
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -24,7 +25,7 @@ from user.services import UserService
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI, container: AsyncContainer):
     async with container(scope=Scope.REQUEST) as request_container:
         await create_tables(await container.get(AsyncEngine))
         user_service = await request_container.get(UserService)
@@ -40,15 +41,26 @@ async def lifespan(app: FastAPI):
     await container.close()
 
 
-app = FastAPI(lifespan=lifespan)
+# noinspection PyShadowingNames
+def create_app():
+    app = FastAPI(lifespan=functools.partial(lifespan, container=container))
 
-app.add_middleware(
-    CORSMiddleware,  # noqa
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    app.add_middleware(
+        CORSMiddleware,  # noqa
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(qr_code_router, prefix="/qr_code")
+    app.include_router(auth_router, prefix="/auth")
+
+    auth.api_errors.register_exception_handlers(app)
+    core.api_errors.register_exception_handlers(app)
+    user.api_errors.register_exception_handlers(app)
+    return app
+
 
 container = make_async_container(
     ConnectionProvider(f"sqlite+aiosqlite:///./{settings.db_name}"),
@@ -57,10 +69,5 @@ container = make_async_container(
     AuthProvider(),
     QrCodeProvider(),
 )
+app = create_app()
 setup_dishka(container=container, app=app)
-app.include_router(qr_code_router, prefix="/qr_code")
-app.include_router(auth_router, prefix="/auth")
-
-auth.api_errors.register_exception_handlers(app)
-core.api_errors.register_exception_handlers(app)
-user.api_errors.register_exception_handlers(app)

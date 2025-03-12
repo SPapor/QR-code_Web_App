@@ -49,11 +49,11 @@ class AuthService:
         if not refresh_token:
             raise RefreshTokenRequiredError
         payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        user_id = payload.get("user_id")
-        if user_id is None:
+        auth_id = payload.get("id")
+        if auth_id is None:
             raise NotAuthorizedError
-        user = await self.auth_repo.get_by_id(UUID(user_id))
-        token_pair = self.create_access_refresh_token_pair(user)
+        auth = await self.auth_repo.get_by_id(UUID(auth_id))
+        token_pair = self.create_access_refresh_token_pair(auth)
         return token_pair
 
     def create_access_refresh_token_pair(self, auth: Auth):
@@ -63,7 +63,7 @@ class AuthService:
         access_token = self.create_jwt_token(jsonable_encoder(at_payload), access_token_exp)
 
         refresh_token_exp = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
-        refresh_token = self.create_jwt_token({"user_id": str(auth.user_id)}, refresh_token_exp)
+        refresh_token = self.create_jwt_token({"id": str(auth.id)}, refresh_token_exp)
         return access_token, refresh_token
 
     @staticmethod

@@ -1,4 +1,5 @@
--r requirements.txt
+-r requirements-prod.txt
+
 black==25.1.0
 flake8==7.1.1
 isort==6.0.0
