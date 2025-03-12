@@ -6,6 +6,9 @@ from core.models import Model
 
 
 @dataclass(kw_only=True)
-class User(Model):
+class Auth(Model):
     id: UUID = field(default_factory=uuid.uuid4)
+    user_id: UUID
     username: str
+    password_hash: str
+    is_admin: bool = False

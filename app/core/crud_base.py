@@ -10,9 +10,9 @@ class CrudBase[ID, DTO]:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, id_: ID) -> DTO | None:
+    async def get_by_id(self, id_: ID) -> DTO:
         res = await self.session.execute(select(self.table).where(self.table.c.id.is_(id_)))
-        return res.mappings().one_or_none()
+        return res.mappings().one()
 
     async def create(self, obj: DTO) -> ID:
         res = await self.session.execute(insert(self.table).values(**obj))
@@ -21,7 +21,7 @@ class CrudBase[ID, DTO]:
 
     async def create_and_get(self, obj: DTO) -> DTO:
         res = await self.session.execute(insert(self.table).values(**obj).returning(self.table))
-        return res.mappings().one_or_none()
+        return res.mappings().one()
 
     async def create_many(self, objs: Sequence[DTO]) -> list[ID]:
         objs = list(objs)
@@ -37,20 +37,24 @@ class CrudBase[ID, DTO]:
         res = await self.session.execute(insert(self.table).values(objs).returning(self.table))
         return res.mappings().all()
 
-    async def update(self, values: DTO) -> None:
-        id_ = values.pop("id")
-        if not values:
-            return
-        await self.session.execute(
+    async def update(self, values: DTO) -> ID:
+        id_ = values["id"]
+        res = await self.session.execute(
+            update(self.table).where(self.table.c.id.is_(id_)).values(values).returning(self.table.c.id)
+        )
+        res = res.scalars().one()
+        return res
+
+    async def update_and_get(self, values: DTO) -> DTO:
+        id_ = values["id"]
+        res = await self.session.execute(
             update(self.table).where(self.table.c.id.is_(id_)).values(values).returning(self.table)
         )
+        return res.mappings().one()
 
     async def update_many(self, objs: Sequence[DTO]) -> None:
         for obj in objs:
-            id_ = obj["id"]
-            await self.session.execute(
-                update(self.table).where(self.table.c.id.is_(id_)).values(obj).returning(self.table)
-            )
+            await self.update(obj)
 
     async def get_many_by_ids(self, ids: Sequence[ID]) -> Sequence[DTO]:
         res = await self.session.execute(select(self.table).where(self.table.c.id.in_(ids)))
