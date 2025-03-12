@@ -13,6 +13,9 @@ class ApiError:
     error_message: str
     error_code: str
 
+    def json(self):
+        return {"error_message": self.error_message, "error_code": self.error_code}
+
 
 class ApiErrors:
     NOT_FOUND = ApiError(status.HTTP_404_NOT_FOUND, "Resource not found", "core.0001")
@@ -20,17 +23,10 @@ class ApiErrors:
     INTERNAL_SERVER_ERROR = ApiError(status.HTTP_500_INTERNAL_SERVER_ERROR, "Internal server error", "core.0003")
 
 
-def static_exception_handler(
-    app: FastAPI,
-    exc: type[ApplicationError],
-    api_err: ApiError
-):
+def static_exception_handler(app: FastAPI, exc: type[ApplicationError], api_err: ApiError):
     @app.exception_handler(exc)
     async def handle_error(request, e):
-        return JSONResponse(
-            status_code=api_err.status_code,
-            content={"error_message": api_err.error_message, "error_code": api_err.error_code}
-        )
+        return JSONResponse(status_code=api_err.status_code, content=api_err.json())
 
     return handle_error
 
