@@ -19,6 +19,7 @@ from core.providers import DataclassSerializerProvider
 from core.settings import settings
 from qr_code.providers import QrCodeProvider
 from qr_code.router import router as qr_code_router
+from user.router import router as user_router
 from user.models import User
 from user.providers import UserProvider
 from user.services import UserService
@@ -55,6 +56,7 @@ def create_app():
 
     app.include_router(qr_code_router, prefix="/qr_code")
     app.include_router(auth_router, prefix="/auth")
+    app.include_router(user_router, prefix="/user")
 
     auth.api_errors.register_exception_handlers(app)
     core.api_errors.register_exception_handlers(app)
