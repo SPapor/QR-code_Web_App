@@ -54,7 +54,8 @@ async def edit(
     qr_code_id: UUID,
     name: str,
     link: str,
+    user_id: UUID = Depends(logged_in_user_id),
 ) -> QrCode:
-    qr_code = await qr_code_service.update_qr_code(qr_code_id, name, link)
+    qr_code = await qr_code_service.update_qr_code(user_id, qr_code_id, name, link)
     await session.commit()
     return qr_code
