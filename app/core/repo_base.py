@@ -69,7 +69,7 @@ class RepoBase[ID, MODEL: Model](metaclass=RepoMeta):
         dto = self.serializer.serialize(values)
         await self.crud.update(dto)
 
-    async def update_get(self, values: MODEL) -> MODEL:
+    async def update_and_get(self, values: MODEL) -> MODEL:
         dto = self.serializer.serialize(values)
         dto = await self.crud.update_and_get(dto)
         return self.serializer.deserialize(dto)
