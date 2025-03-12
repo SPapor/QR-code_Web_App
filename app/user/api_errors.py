@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from core.api_errors import static_exception_handler, ApiError
+from core.api_errors import ApiError, static_exception_handler
 from user.models import User
 
 

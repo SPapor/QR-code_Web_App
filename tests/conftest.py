@@ -47,6 +47,7 @@ async def session(request_container) -> AsyncSession:
 @pytest.fixture
 def app(container):
     from main import create_app
+
     app = create_app()
     setup_dishka(container=container, app=app)
     return app
