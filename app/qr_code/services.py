@@ -20,3 +20,16 @@ class QrCodeService:
 
     async def get_all_user_qr_codes(self, user_id: UUID) -> Sequence[QrCode]:
         return await self.qr_code_repo.get_all_user_qr_codes(user_id)
+
+    async def create_qr_code(self, user_id: UUID, name: str, link: str) -> QrCode:
+        qr_code = QrCode(user_id=user_id, name=name, link=link)
+        return await self.qr_code_repo.create_and_get(qr_code)
+
+    async def get_by_id(self, id: UUID) -> QrCode:
+        return await self.qr_code_repo.get_by_id(id)
+
+    async def update_qr_code(self, qr_code_id: UUID, name: str, link: str) -> QrCode:
+        qr_code = await self.qr_code_repo.get_by_id(qr_code_id)
+        qr_code.link = link
+        qr_code.name = name
+        return await self.qr_code_repo.update_and_get(qr_code)
