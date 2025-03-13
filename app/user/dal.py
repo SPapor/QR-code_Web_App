@@ -14,7 +14,7 @@ class UserCrud(CrudBase[UUID, DTO]):
     table = user_table
 
     async def get_by_username(self, username: str) -> DTO | None:
-        res = await self.session.execute(select(self.table).where(self.table.c.username.is_(username)))
+        res = await self.session.execute(select(self.table).where(self.table.c.username == username))
         return res.mappings().one_or_none()
 
 

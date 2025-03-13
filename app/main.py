@@ -67,7 +67,7 @@ def create_app():
 
 
 container = make_async_container(
-    ConnectionProvider(f"sqlite+aiosqlite:///./{settings.db_name}"),
+    ConnectionProvider(settings.DB_URI),
     DataclassSerializerProvider(),
     UserProvider(),
     AuthProvider(),

@@ -22,6 +22,8 @@ def handle_exceptions(func):
             match error_message:
                 case msg if msg.startswith('(sqlite3.IntegrityError) UNIQUE constraint failed:'):
                     raise self.entity_cls.AlreadyExistError
+                case msg if 'duplicate key value violates unique constraint' in msg:
+                    raise self.entity_cls.AlreadyExistError
                 case _:
                     raise
 

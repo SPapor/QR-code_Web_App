@@ -15,7 +15,7 @@ class QrCodeCrud(CrudBase[UUID, DTO]):
     table = qr_code_table
 
     async def get_all_user_qr_codes(self, user_id: UUID) -> Sequence[DTO]:
-        res = await self.session.execute(select(self.table).where(self.table.c.user_id.is_(user_id)))
+        res = await self.session.execute(select(self.table).where(self.table.c.user_id == user_id))
         return res.mappings().all()
 
 
