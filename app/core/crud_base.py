@@ -11,7 +11,7 @@ class CrudBase[ID, DTO]:
         self.session = session
 
     async def get_by_id(self, id_: ID) -> DTO:
-        res = await self.session.execute(select(self.table).where(self.table.c.id.is_(id_)))
+        res = await self.session.execute(select(self.table).where(self.table.c.id == id_))
         return res.mappings().one()
 
     async def create(self, obj: DTO) -> ID:
@@ -40,7 +40,7 @@ class CrudBase[ID, DTO]:
     async def update(self, values: DTO) -> ID:
         id_ = values["id"]
         res = await self.session.execute(
-            update(self.table).where(self.table.c.id.is_(id_)).values(values).returning(self.table.c.id)
+            update(self.table).where(self.table.c.id == id_).values(values).returning(self.table.c.id)
         )
         res = res.scalars().one()
         return res
@@ -48,7 +48,7 @@ class CrudBase[ID, DTO]:
     async def update_and_get(self, values: DTO) -> DTO:
         id_ = values["id"]
         res = await self.session.execute(
-            update(self.table).where(self.table.c.id.is_(id_)).values(values).returning(self.table)
+            update(self.table).where(self.table.c.id == id_).values(values).returning(self.table)
         )
         return res.mappings().one()
 
@@ -61,7 +61,7 @@ class CrudBase[ID, DTO]:
         return res.mappings().all()
 
     async def delete(self, id_: ID) -> None:
-        await self.session.execute(delete(self.table).where(self.table.c.id.is_(id_)))
+        await self.session.execute(delete(self.table).where(self.table.c.id == id_))
 
     async def delete_many(self, ids: Sequence[ID]) -> None:
         await self.session.execute(delete(self.table).where(self.table.c.id.in_(ids)))
