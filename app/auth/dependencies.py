@@ -15,7 +15,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 async def access_token_payload(
     auth_service: FromDishka[AuthService], token: str = Depends(oauth2_scheme)
 ) -> AccessTokenPayload:
-    return auth_service.decode_access_token(token)
+    payload = auth_service.decode_access_token(token)
+    return payload
 
 
 def logged_in_user_id(payload: AccessTokenPayload = Depends(access_token_payload)) -> UUID:
