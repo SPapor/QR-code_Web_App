@@ -1,12 +1,6 @@
-// frontend/js/ui.js
-// Tiny DOM-utility grab-bag. Zero dependencies, ES-module friendly.
-
 export const q  = (sel, root = document)      => root.querySelector(sel);
 export const qs = (sel, root = document)      => [...root.querySelectorAll(sel)];
 
-/**
- * el('div', { class:'box', text:'Hi' }, otherEl, 'raw text')
- */
 export function el (tag, attrs = {}, ...kids) {
   const node = document.createElement(tag);
 
@@ -26,18 +20,9 @@ export function el (tag, attrs = {}, ...kids) {
   return node;
 }
 
-/* ---------------------------------------------------------------- *\
-   Show / hide helpers
-\* ---------------------------------------------------------------- */
-
 export const hide  = el => { if (el) el.hidden = true;  };
 export const show  = el => { if (el) el.hidden = false; };
 export const toggle= el => { if (el) el.hidden = !el.hidden; };
-
-/* ---------------------------------------------------------------- *\
-   Event-delegation helper
-   on(parent, 'click', 'button[data-x]', e => ...)
-\* ---------------------------------------------------------------- */
 
 export function on (root, evt, selector, handler) {
   root.addEventListener(evt, e => {
@@ -45,10 +30,6 @@ export function on (root, evt, selector, handler) {
     if (t && root.contains(t)) handler.call(t, e);
   });
 }
-
-/* ---------------------------------------------------------------- *\
-   Flash message (appears top-center, auto-dismiss)
-\* ---------------------------------------------------------------- */
 
 export function flash (msg, type = 'info', ms = 2500) {
   let box = q('#flash-box');
@@ -70,10 +51,6 @@ export function flash (msg, type = 'info', ms = 2500) {
   show(box);
   if (ms > 0) setTimeout(() => { box.classList.remove('show'); hide(box); }, ms);
 }
-
-/* ---------------------------------------------------------------- *\
-   Escape utilities – handy for user-supplied strings
-\* ---------------------------------------------------------------- */
 
 export function escapeHTML (s = '') {
   return s.replace(/[&<>"']/g, c =>
