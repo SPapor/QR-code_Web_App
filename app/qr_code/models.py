@@ -23,7 +23,7 @@ class QrCode(Model):
             box_size=10,
             border=4,
         )
-        qr.add_data(settings.API_URL + settings.QR_CODE_ENDPOINT.format(uuid=self.id))
+        qr.add_data("https://" + settings.API_URL + settings.QR_CODE_ENDPOINT.format(uuid=self.id))
         qr.make(fit=True)
         img = qr.make_image(fill="black", back_color="white")
         return img
