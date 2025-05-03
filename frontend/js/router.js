@@ -1,7 +1,3 @@
-// frontend/js/router.js
-// Simple hash-based router plus a few UI/event helpers.
-// Keeps the entire app inside one HTML file while reacting to auth state.
-
 import {
   login    as apiLogin,
   register as apiRegister,
@@ -9,10 +5,6 @@ import {
   isLoggedIn
 } from './auth.js';
 import { loadList } from './qr.js';
-
-/* ---------------------------------------------------------------- *\
-   View switching helpers
-\* ---------------------------------------------------------------- */
 
 const VIEWS = [...document.querySelectorAll('[data-view]')];
 
@@ -22,10 +14,6 @@ const show     = id => {
   const el = document.getElementById(id);
   if (el) el.hidden = false;
 };
-
-/* ---------------------------------------------------------------- *\
-   Route handlers
-\* ---------------------------------------------------------------- */
 
 function guard () {
   if (isLoggedIn()) return true;
@@ -49,33 +37,22 @@ const ROUTES = {
 
 function handleRoute () {
   const h = location.hash.split('?')[0];
-  (ROUTES[h] || routeLogin)();           // fall back to login
+  (ROUTES[h] || routeLogin)();
 }
 
-/* ---------------------------------------------------------------- *\
-   Wire global events
-\* ---------------------------------------------------------------- */
-
-// hash navigation
 window.addEventListener('hashchange', handleRoute);
 window.addEventListener('load', () => {
-  // Auto-redirect logged-in users hitting the root to dashboard
   if (isLoggedIn() && (!location.hash || location.hash === '#login')) {
     location.hash = '#dash';
   }
   handleRoute();
 });
 
-// react to auth events dispatched from auth.js
 window.addEventListener('auth', ev => {
   const t = ev.detail.type;
   if (t === 'logout') location.hash = '#login';
   if (t === 'login')  location.hash = '#dash';
 });
-
-/* ---------------------------------------------------------------- *\
-   UI: login / register / logout actions
-\* ---------------------------------------------------------------- */
 
 document.getElementById('loginForm')?.addEventListener('submit', async e => {
   e.preventDefault();
@@ -94,9 +71,5 @@ document.getElementById('regForm')?.addEventListener('submit', async e => {
 });
 
 document.getElementById('btn-logout')?.addEventListener('click', () => apiLogout());
-
-/* ---------------------------------------------------------------- *\
-   Expose for debugging
-\* ---------------------------------------------------------------- */
 
 export { handleRoute as reroute };

@@ -1,14 +1,6 @@
-// frontend/js/auth.js
-// Auth helper adapted for back-end that stores the refresh token
-// in an HTTP-only cookie rather than the JSON body.
-
 const API_BASE  = 'http://192.168.1.135:8000';
-const ACCESS_KEY = 'access';      // localStorage key for access JWT
-const EXP_KEY    = 'exp';         // millis-since-epoch when access token dies
-
-/* ---------------------------------------------------------------- *\
-   Public API
-\* ---------------------------------------------------------------- */
+const ACCESS_KEY = 'access';
+const EXP_KEY    = 'exp';
 
 export function getAccess () {
   return localStorage.getItem(ACCESS_KEY) || null;
@@ -25,11 +17,11 @@ export async function login (username, password) {
     method      : 'POST',
     headers     : { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
-    credentials : 'include'          // ← set the refresh cookie
+    credentials : 'include'
   });
   if (!r.ok) throw await r.json();
 
-  const data = await r.json();       // {access_token, (optional) expires_in}
+  const data = await r.json();
   saveTokens(data);
   signal('login');
   return data;
@@ -43,21 +35,21 @@ export async function register (username, password) {
     credentials : 'include'
   });
   if (!r.ok) throw await r.json();
-  return login(username, password);  // auto sign-in
+  return login(username, password);
 }
 
 export async function refreshToken () {
   const r = await fetch(`${API_BASE}/auth/refresh`, {
     method      : 'POST',
-    credentials : 'include'          // sends refresh cookie, receives new access
+    credentials : 'include'
   });
 
   if (!r.ok) {
-    logout();                        // cookie probably invalid
+    logout();
     throw await r.json();
   }
 
-  const data = await r.json();       // {access_token, (optional) expires_in}
+  const data = await r.json();
   saveTokens(data);
   signal('refresh');
   return data.access_token;
@@ -69,10 +61,6 @@ export function logout () {
   signal('logout');
 }
 
-/**
- * authFetch(url, opts) → Response
- * Adds Bearer header, auto-refreshes once on 401, always passes cookies.
- */
 export async function authFetch (url, opts = {}) {
   let token = await ensureValidAccess();
   opts.headers      = { ...opts.headers, Authorization: `Bearer ${token}` };
@@ -80,7 +68,7 @@ export async function authFetch (url, opts = {}) {
 
   let r = await fetch(url, opts);
 
-  if (r.status === 401) {                  // token expired → one forced refresh
+  if (r.status === 401) {
     token = await refreshToken();
     opts.headers.Authorization = `Bearer ${token}`;
     r = await fetch(url, opts);
@@ -88,14 +76,10 @@ export async function authFetch (url, opts = {}) {
   return r;
 }
 
-/* ---------------------------------------------------------------- *\
-   Internals
-\* ---------------------------------------------------------------- */
-
 function saveTokens ({ access_token, expires_in }) {
   localStorage.setItem(ACCESS_KEY, access_token);
 
-  if (expires_in) {                        // may not be present
+  if (expires_in) {
     const expMs = Date.now() + expires_in * 1000;
     localStorage.setItem(EXP_KEY, expMs.toString());
   } else {
@@ -112,7 +96,7 @@ async function ensureValidAccess () {
   if (!getAccess()) throw new Error('Not authenticated');
 
   if (tokenExpiresSoon()) {
-    try { await refreshToken(); } catch { /* fall through, maybe 401 later */ }
+    try { await refreshToken(); } catch {}
   }
   return getAccess();
 }

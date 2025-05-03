@@ -1,30 +1,12 @@
-// frontend/js/qr.js
-// Minimal QR-code CRUD client for the FastAPI backend.
-//
-// Assumes the following DOM elements exist (see index.html):
-//   #list        <tbody> that will be filled with rows
-//   #preview     <div>   where the selected QR image is shown
-//   #btn-new     “New QR” button in dashboard
-//   #editForm    shared form for both create and edit views
-//   #edit-name   text input (name)
-//   #edit-link   text input (link)
-//
-// Router will switch <section data-view> visibility; this module
-// focuses only on talking to the API and wiring UI events.
-
 import { authFetch } from './auth.js';
 
-const API_BASE = 'http://192.168.1.135:8000';                      // override if backend served elsewhere
-let currentEditId = null;                 // null ⇒ create, uuid ⇒ edit
-
-/* ---------------------------------------------------------------- *\
-    Low-level API helpers
-\* ---------------------------------------------------------------- */
+const API_BASE = 'http://192.168.1.135:8000';
+let currentEditId = null;
 
 export async function fetchAll () {
   const r = await authFetch(`${API_BASE}/qr_code/`);
   if (!r.ok) throw await r.json();
-  return r.json();                        // array of QrCode objects
+  return r.json();
 }
 
 export async function createQr (name, link) {
@@ -44,10 +26,6 @@ export async function updateQr (id, name, link) {
 export function qrImageUrl (id) {
   return `${API_BASE}/qr_code/${id}/image`;
 }
-
-/* ---------------------------------------------------------------- *\
-    UI logic
-\* ---------------------------------------------------------------- */
 
 export async function loadList () {
   const tbody = document.getElementById('list');
@@ -103,46 +81,32 @@ async function handleEditSubmit (evt) {
   }
 }
 
-/* ---------------------------------------------------------------- *\
-    Event wiring – called once at app start
-\* ---------------------------------------------------------------- */
-
 export function initQrModule () {
-  // Dashboard list click
   const tbody = document.getElementById('list');
   if (tbody) {
     tbody.addEventListener('click', e => {
       const id = e.target?.dataset?.edit;
       if (!id) return;
-      // pull existing row data so user can edit
       const row = e.target.closest('tr');
       const [nameCell, linkCell] = row.children;
       openEditView(id, nameCell.textContent, linkCell.querySelector('a').href);
     });
-    // Preview on row hover
     tbody.addEventListener('mouseover', e => {
       const img = e.target.closest('tr')?.querySelector('img');
-      if (img) showPreview(img.src.split('/').slice(-2, -1)[0]); // crude id extraction
+      if (img) showPreview(img.src.split('/').slice(-2, -1)[0]);
     });
   }
 
-  // “+ New QR” button
   const btnNew = document.getElementById('btn-new');
   if (btnNew) btnNew.addEventListener('click', () => openEditView(null));
 
-  // Edit/Create form submit
   const form = document.getElementById('editForm');
   if (form) form.addEventListener('submit', handleEditSubmit);
 
-  // When user logs in / refreshes, reload list automatically
   window.addEventListener('auth', ev => {
     if (ev.detail.type === 'login' || ev.detail.type === 'refresh') loadList();
   });
 }
-
-/* ---------------------------------------------------------------- *\
-    Small util
-\* ---------------------------------------------------------------- */
 
 function escapeHTML (s) {
   return s.replace(/[&<>"']/g, m => ({
@@ -151,5 +115,4 @@ function escapeHTML (s) {
 }
 function escapeAttr (s) { return escapeHTML(s).replace(/"/g, '&quot;'); }
 
-// Initialize automatically
 initQrModule();
