@@ -14,7 +14,7 @@ else
 endif
 
 install-requirements:
-	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install -r ./app/requirements.txt
 
 black:
 	$(PYTHON) -m black -l 120 -S ./app ./tests
