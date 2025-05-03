@@ -21,6 +21,7 @@ class AccessTokenPayload:
     user_id: UUID
     username: str
     is_admin: bool = False
+    token_type: str = "access"
 
 
 class AuthService:
@@ -49,6 +50,8 @@ class AuthService:
         if not refresh_token:
             raise RefreshTokenRequiredError
         payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("token_type") != "refresh":
+            raise NotAuthorizedError
         auth_id = payload.get("id")
         if auth_id is None:
             raise NotAuthorizedError
@@ -63,7 +66,8 @@ class AuthService:
         access_token = self.create_jwt_token(jsonable_encoder(at_payload), access_token_exp)
 
         refresh_token_exp = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
-        refresh_token = self.create_jwt_token({"id": str(auth.id)}, refresh_token_exp)
+        refresh_token_payload = {"id": str(auth.id), 'token_type': 'refresh'}
+        refresh_token = self.create_jwt_token(refresh_token_payload, refresh_token_exp)
         return access_token, refresh_token
 
     @staticmethod
@@ -98,4 +102,6 @@ class AuthService:
     @staticmethod
     def decode_access_token(token: str) -> AccessTokenPayload:
         payload = AuthService.decode_jwt_token(token)
+        if payload.get("token_type") != "access":
+            raise NotAuthorizedError
         return AccessTokenPayload(user_id=UUID(payload["user_id"]), username=payload["username"])
