@@ -10,6 +10,10 @@ from user.dal import UserCrud, UserRepo
 from user.models import User
 from user.services import UserService
 
+pytest_plugins = [
+    "tests.test_auth.conftest",
+]
+
 
 @pytest_asyncio.fixture
 async def user_service(request_container) -> UserService:
