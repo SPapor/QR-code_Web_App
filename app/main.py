@@ -49,7 +49,8 @@ def create_app():
 
     app.add_middleware(
         CORSMiddleware,  # noqa
-        allow_origins=["*"],
+        allow_origins=[],
+        allow_origin_regex=r".*",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
