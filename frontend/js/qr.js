@@ -1,4 +1,4 @@
-import { authFetch } from './auth.js';
+import {authFetch} from './auth.js';
 import {API_BASE} from "./config.js";
 
 let currentEditId = null;
@@ -23,6 +23,16 @@ export async function updateQr (id, name, link) {
   return r.json();                        // updated QrCode
 }
 
+export async function deleteQr(id) {
+  const res = await authFetch(`${API_BASE}/qr_code/${id}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) {
+    throw await res.json();
+  }
+  return null;
+}
+
 export function qrImageUrl (id) {
   return `${API_BASE}/qr_code/${id}/image`;
 }
@@ -45,7 +55,10 @@ export async function loadList () {
         <td>${escapeHTML(q.name)}</td>
         <td><a href="${escapeAttr(q.link)}" target="_blank">visit</a></td>
         <td><img src="${qrImageUrl(q.id)}" alt="qr" width="64"></td>
-        <td><button data-edit="${q.id}">Edit</button></td>`;
+        <td>
+          <button data-edit="${q.id}">Edit</button>
+          <button data-delete="${q.id}" style="margin-left:.4rem">Delete</button>
+        </td>`;
       tbody.appendChild(tr);
     });
   } catch (err) {
@@ -86,10 +99,21 @@ export function initQrModule () {
   if (tbody) {
     tbody.addEventListener('click', e => {
       const id = e.target?.dataset?.edit;
-      if (!id) return;
-      const row = e.target.closest('tr');
-      const [nameCell, linkCell] = row.children;
-      openEditView(id, nameCell.textContent, linkCell.querySelector('a').href);
+      if (id) {
+        const row = e.target.closest('tr');
+        const [nameCell, linkCell] = row.children;
+        openEditView(id, nameCell.textContent, linkCell.querySelector('a').href);
+      }
+
+      const delId = e.target?.dataset?.delete;
+      if (delId) {
+        if (!confirm('Are you sure you want to delete this QR code?')) return;
+        deleteQr(delId)
+          .then(() => loadList())
+          .catch(err => {
+            alert(err?.detail || JSON.stringify(err));
+          });
+      }
     });
     tbody.addEventListener('mouseover', e => {
       const img = e.target.closest('tr')?.querySelector('img');
