@@ -41,6 +41,17 @@ async def create_qr_code(
     return qr_code
 
 
+@router.delete("/{qr_code_id}")
+async def delete_qr_code(
+    qr_code_service: FromDishka[QrCodeService],
+    session: FromDishka[AsyncSession],
+    qr_code_id: UUID,
+    user_id: UUID = Depends(logged_in_user_id),
+):
+    await qr_code_service.delete_qr_code(user_id, qr_code_id)
+    await session.commit()
+    return {"ok": True}
+
 @router.get("/{qr_code_id}")
 async def redirect(qr_code_id: UUID, qr_code_service: FromDishka[QrCodeService]) -> RedirectResponse:
     qr_code = await qr_code_service.get_by_id(qr_code_id)
