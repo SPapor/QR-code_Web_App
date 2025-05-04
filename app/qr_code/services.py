@@ -25,6 +25,12 @@ class QrCodeService:
         qr_code = QrCode(user_id=user_id, name=name, link=link)
         return await self.qr_code_repo.create_and_get(qr_code)
 
+    async def delete_qr_code(self, user_id: UUID, qr_code_id: UUID) -> None:
+        qr_code = await self.qr_code_repo.get_by_id(qr_code_id)
+        if qr_code.user_id != user_id:
+            raise QrCode.NotFoundError
+        await self.qr_code_repo.delete(qr_code.id)
+
     async def get_by_id(self, id: UUID) -> QrCode:
         return await self.qr_code_repo.get_by_id(id)
 
