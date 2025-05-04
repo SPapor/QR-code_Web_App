@@ -50,10 +50,17 @@ export async function loadList () {
     }
     tbody.innerHTML = '';
     data.forEach(q => {
+      const cleanLink = q.link.replace(/^https?:\/\//, '');
+      const maxLen = 20;
+      let displayLink = cleanLink;
+      if (cleanLink.length > maxLen) displayLink = cleanLink.slice(0, maxLen) + '...';
+      displayLink = escapeHTML(displayLink);
+
       const tr  = document.createElement('tr');
+
       tr.innerHTML = `
         <td>${escapeHTML(q.name)}</td>
-        <td><a href="${escapeAttr(q.link)}" target="_blank">visit</a></td>
+        <td><a href="${escapeAttr(q.link)}" target="_blank">${displayLink}</a></td>
         <td><img src="${qrImageUrl(q.id)}" alt="qr" width="64"></td>
         <td>
           <button data-edit="${q.id}">Edit</button>
