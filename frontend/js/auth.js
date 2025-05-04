@@ -1,4 +1,5 @@
-const API_BASE  = 'http://192.168.1.135:8000';
+import {API_BASE} from "./config.js";
+
 const ACCESS_KEY = 'access';
 const EXP_KEY    = 'exp';
 

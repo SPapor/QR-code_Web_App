@@ -1,6 +1,6 @@
 import { authFetch } from './auth.js';
+import {API_BASE} from "./config.js";
 
-const API_BASE = 'http://192.168.1.135:8000';
 let currentEditId = null;
 
 export async function fetchAll () {
