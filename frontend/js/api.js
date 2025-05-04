@@ -1,7 +1,7 @@
 
 import {authFetch} from './auth.js';
+import {API_BASE} from "./config.js";
 
-const API_BASE = 'http://192.168.1.135:8000';
 
 export async function api(path, opts = {}) {
     const {qs, raw, ...fetchOpts} = opts;
