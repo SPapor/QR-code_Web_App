@@ -1,0 +1,87 @@
+body {
+    background-color: #12161F;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    font-family: "Times New Roman";
+}
+input {
+    border-radius: 15px;
+
+    box-shadow: 7px 7px 7px #5E6B7A;
+}
+
+button {
+    border-radius: 20px;
+    background-color: #7FB9FF;
+    transform: scale(0.98);
+    transition: background-color 0.5s ease, transform 0.3s ease;
+}
+button:hover {
+      background-color: #4182E0;
+      transform: scale(1.05);
+}
+p {
+    color: white;
+    text-align: center;
+    font-size: 20px;
+    font-family: cursive;
+}
+a {
+    text-decoration: none;
+    color: #5E6B7A;
+}
+a:hover {
+    text-decoration: underline;
+    color: #7FB9FF;
+}
+
+
+
+header {
+    margin-bottom: 1rem;
+  }
+
+
+
+  input {
+    width: 100%;
+    margin-bottom: 0.6rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: #ffffff;
+      box-shadow: 7px 7px 7px #F4C9DA;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+    text-align: left;
+  }
+
+  th {
+    background-color: #1f2530;
+      text-align: center;
+      color: white;
+  }
+  #preview {
+      margin-left: 300px;
+  }
+  #editForm div {
+    margin-top: 0.6rem;
+  }
+
+  a[href="#dash"] {
+    color: #007bff;
+    text-decoration: underline;
+  }
+
+  a[href="#dash"]:hover {
+    text-decoration: none;
+  }
