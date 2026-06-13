@@ -36,14 +36,6 @@ export function flash (msg, type = 'info', ms = 2500) {
   if (!box) {
     box = el('div', { id: 'flash-box', class: 'flash' });
     document.body.append(box);
-    const style = el('style', { html: `
-      .flash{position:fixed;top:1rem;left:50%;transform:translateX(-50%);
-             padding:.6rem 1.2rem;border-radius:.4rem;background:#333;color:#fff;
-             font:14px/1 sans-serif;opacity:0;transition:opacity .2s;}
-      .flash.show{opacity:1;}
-      .flash.error{background:#c62828;}
-    `});
-    document.head.append(style);
   }
   box.textContent = msg;
   box.classList.toggle('error', type === 'error');
