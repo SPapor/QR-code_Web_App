@@ -63,8 +63,8 @@ export async function loadList () {
         <td><a href="${escapeAttr(q.link)}" target="_blank">${displayLink}</a></td>
         <td><img src="${qrImageUrl(q.id)}" alt="qr" width="64"></td>
         <td>
-          <button data-edit="${q.id}">Edit</button>
-          <button data-delete="${q.id}" style="margin-left:.4rem">Delete</button>
+          <button class="btn-ghost" data-edit="${q.id}">Edit</button>
+          <button class="btn-danger" data-delete="${q.id}">Delete</button>
         </td>`;
       tbody.appendChild(tr);
     });
