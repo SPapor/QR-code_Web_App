@@ -32,7 +32,7 @@ check-isort:
 	$(PYTHON) -m isort -l 120 --profile black ./app ./tests -c
 
 check-flake8:
-	$(PYTHON) -m flake8 --ignore=W503,E711,E712,W291,E704 --max-line-length=120 ./app ./tests
+	$(PYTHON) -m flake8 --ignore=W503,E711,E712,W291,E704 --max-line-length=120 --exclude=.venv,__pycache__ ./app ./tests
 
 pytest:
 	$(PYTHON) -m pytest ./tests

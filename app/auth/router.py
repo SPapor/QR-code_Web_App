@@ -31,7 +31,7 @@ def token_pair_to_response(access_token: str, refresh_token: str):
         content={
             'access_token': access_token,
             "token_type": "bearer",
-            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         }
     )
     response.set_cookie(
