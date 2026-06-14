@@ -18,14 +18,14 @@ def handle_exceptions(func):
         except sqlalchemy.exc.NoResultFound:
             raise self.entity_cls.NotFoundError
         except sqlalchemy.exc.IntegrityError as e:
-            error_message = str(e)
-            match error_message:
-                case msg if msg.startswith('(sqlite3.IntegrityError) UNIQUE constraint failed:'):
-                    raise self.entity_cls.AlreadyExistError
-                case msg if 'duplicate key value violates unique constraint' in msg:
-                    raise self.entity_cls.AlreadyExistError
-                case _:
-                    raise
+            orig = e.orig
+            is_unique = (
+                'UNIQUE constraint failed' in str(orig)
+                or getattr(orig, 'pgcode', None) == '23505'
+            )
+            if is_unique:
+                raise self.entity_cls.AlreadyExistError
+            raise
 
     wrapper.__handle_exceptions__ = True
     return wrapper

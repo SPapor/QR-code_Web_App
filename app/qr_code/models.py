@@ -18,12 +18,12 @@ class QrCode(Model):
 
     def get_image(self) -> Image.Image:
         qr = qrcode.main.QRCode(
-            version=5,
+            version=None,
             error_correction=qrcode.constants.ERROR_CORRECT_M,
             box_size=10,
             border=4,
         )
-        qr.add_data("http://" + settings.API_URL + settings.QR_CODE_ENDPOINT.format(uuid=self.id))
+        qr.add_data(settings.API_SCHEME + "://" + settings.API_URL + settings.QR_CODE_ENDPOINT.format(uuid=self.id))
         qr.make(fit=True)
         img = qr.make_image(fill="black", back_color="white")
         return img

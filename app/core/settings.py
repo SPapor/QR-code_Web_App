@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     DB_URI: str = "sqlite+aiosqlite:///./database.sqlite"
 
+    API_SCHEME: str = "http"
     API_URL: str = "127.0.0.1:8000"
     QR_CODE_ENDPOINT: str = "/qr_code/{uuid}"
 

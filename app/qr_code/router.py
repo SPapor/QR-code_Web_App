@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from auth.dependencies import logged_in_user_id
+from core.dependencies import auto_commit
 from qr_code.models import QrCode
 from qr_code.services import QrCodeService
 
@@ -31,25 +32,22 @@ async def get_all_user_qr_codes(qr_code_service: FromDishka[QrCodeService], user
 @router.post("/")
 async def create_qr_code(
     qr_code_service: FromDishka[QrCodeService],
-    session: FromDishka[AsyncSession],
     name: str,
     link: str,
     user_id: UUID = Depends(logged_in_user_id),
+    _session: AsyncSession = Depends(auto_commit),
 ):
-    qr_code = await qr_code_service.create_qr_code(user_id, name, link)
-    await session.commit()
-    return qr_code
+    return await qr_code_service.create_qr_code(user_id, name, link)
 
 
 @router.delete("/{qr_code_id}")
 async def delete_qr_code(
     qr_code_service: FromDishka[QrCodeService],
-    session: FromDishka[AsyncSession],
     qr_code_id: UUID,
     user_id: UUID = Depends(logged_in_user_id),
+    _session: AsyncSession = Depends(auto_commit),
 ):
     await qr_code_service.delete_qr_code(user_id, qr_code_id)
-    await session.commit()
     return {"ok": True}
 
 
@@ -62,12 +60,10 @@ async def redirect(qr_code_id: UUID, qr_code_service: FromDishka[QrCodeService])
 @router.put("/{qr_code_id}")
 async def edit(
     qr_code_service: FromDishka[QrCodeService],
-    session: FromDishka[AsyncSession],
     qr_code_id: UUID,
     name: str,
     link: str,
     user_id: UUID = Depends(logged_in_user_id),
+    _session: AsyncSession = Depends(auto_commit),
 ) -> QrCode:
-    qr_code = await qr_code_service.update_qr_code(user_id, qr_code_id, name, link)
-    await session.commit()
-    return qr_code
+    return await qr_code_service.update_qr_code(user_id, qr_code_id, name, link)
