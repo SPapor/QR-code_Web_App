@@ -1,0 +1,37 @@
+services:
+  backend:
+    build:
+      context: ./app
+    env_file: .env
+    volumes:
+      - db_data:/app
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  urls:
+    image: busybox
+    depends_on:
+      - frontend
+    command: >
+      sh -c '
+        echo "" &&
+        echo "  ┌─────────────────────────────────────────┐" &&
+        echo "  │  Backend   →  http://localhost:8001     │" &&
+        echo "  │  Frontend  →  http://localhost:3000     │" &&
+        echo "  └─────────────────────────────────────────┘" &&
+        echo ""
+      '
+    restart: "no"
+
+volumes:
+  db_data:

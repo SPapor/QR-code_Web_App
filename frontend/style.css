@@ -1,87 +1,299 @@
+/* ─── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --bg:          #0F1117;
+  --surface:     #1A1E2A;
+  --surface-2:   #222737;
+  --border:      #2A2F3E;
+  --accent:      #6C8FFF;
+  --accent-h:    #8BA4FF;
+  --accent-dim:  rgba(108,143,255,.15);
+  --text:        #E8EAF0;
+  --text-2:      #8892A0;
+  --red:         #E05252;
+  --green:       #4CAF7D;
+  --radius:      12px;
+  --radius-sm:   8px;
+  --shadow:      0 4px 24px rgba(0,0,0,.4);
+}
+
+/* ─── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Base ──────────────────────────────────────────────────────── */
 body {
-    background-color: #12161F;
+  font: 15px/1.55 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0 1rem 4rem;
 }
 
-h1 {
-    color: white;
-    text-align: center;
-    font-family: "Times New Roman";
+/* ─── Views ─────────────────────────────────────────────────────── */
+section[data-view]             { display: none; }
+section[data-view]:not([hidden]) { display: block; }
+
+/* ─── Auth card (login / register) ─────────────────────────────── */
+.auth-card {
+  max-width: 400px;
+  margin: 6rem auto 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2.2rem 2.4rem;
 }
+
+.auth-card h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.6rem;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -.3px;
+}
+
+.auth-card p {
+  text-align: center;
+  margin-top: 1.2rem;
+  color: var(--text-2);
+  font-size: .9rem;
+}
+
+/* ─── Dashboard layout ──────────────────────────────────────────── */
+#view-dash {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-top: 2rem;
+}
+
+/* ─── Topbar ────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.8rem;
+}
+
+.topbar h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -.3px;
+}
+
+/* ─── Edit view ─────────────────────────────────────────────────── */
+#view-edit {
+  max-width: 480px;
+  margin: 4rem auto 0;
+}
+
+#view-edit h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1.6rem;
+}
+
+/* ─── Form ──────────────────────────────────────────────────────── */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+}
+
+/* ─── Inputs ────────────────────────────────────────────────────── */
 input {
-    border-radius: 15px;
-
-    box-shadow: 7px 7px 7px #5E6B7A;
+  width: 100%;
+  padding: .65rem 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
 }
 
+input::placeholder { color: var(--text-2); }
+
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* ─── Buttons ───────────────────────────────────────────────────── */
 button {
-    border-radius: 20px;
-    background-color: #7FB9FF;
-    transform: scale(0.98);
-    transition: background-color 0.5s ease, transform 0.3s ease;
+  font: inherit;
+  font-weight: 600;
+  padding: .6rem 1.3rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .2s, transform .15s, box-shadow .2s;
 }
-button:hover {
-      background-color: #4182E0;
-      transform: scale(1.05);
+
+button:active { transform: scale(.97); }
+
+/* primary */
+button.btn-primary,
+form button[type="submit"],
+#btn-new {
+  background: var(--accent);
+  color: #fff;
 }
-p {
-    color: white;
-    text-align: center;
-    font-size: 20px;
-    font-family: cursive;
+
+button.btn-primary:hover,
+form button[type="submit"]:hover,
+#btn-new:hover {
+  background: var(--accent-h);
+  box-shadow: 0 4px 14px rgba(108,143,255,.4);
 }
+
+/* ghost / secondary */
+button.btn-ghost,
+#btn-logout {
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+button.btn-ghost:hover,
+#btn-logout:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--text-2);
+}
+
+/* danger */
+button.btn-danger {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid rgba(224,82,82,.35);
+}
+
+button.btn-danger:hover {
+  background: rgba(224,82,82,.1);
+}
+
+/* ─── #btn-new ──────────────────────────────────────────────────── */
+#btn-new {
+  margin-bottom: 1rem;
+  font-size: .9rem;
+}
+
+/* ─── Table ─────────────────────────────────────────────────────── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: .78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding: .75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+
+tbody tr:last-child { border-bottom: none; }
+
+tbody tr:hover { background: var(--surface-2); }
+
+td {
+  padding: .75rem 1rem;
+  color: var(--text);
+  font-size: .9rem;
+  vertical-align: middle;
+}
+
+td a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: .82rem;
+  word-break: break-all;
+}
+
+td a:hover { text-decoration: underline; }
+
+/* action buttons inside table */
+td button {
+  font-size: .78rem;
+  padding: .35rem .75rem;
+  margin-right: .3rem;
+}
+
+/* ─── QR preview ────────────────────────────────────────────────── */
+#preview {
+  margin-top: 1.4rem;
+  display: flex;
+  justify-content: center;
+}
+
+#preview img {
+  max-width: 200px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: .4rem;
+}
+
+/* ─── Links ─────────────────────────────────────────────────────── */
 a {
-    text-decoration: none;
-    color: #5E6B7A;
-}
-a:hover {
-    text-decoration: underline;
-    color: #7FB9FF;
+  color: var(--accent);
+  text-decoration: none;
 }
 
+a:hover { text-decoration: underline; }
 
+/* ─── Flash toast ───────────────────────────────────────────────── */
+.flash {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: .65rem 1.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: .88rem;
+  font-weight: 500;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity .2s;
+  white-space: nowrap;
+  z-index: 999;
+}
 
-header {
-    margin-bottom: 1rem;
-  }
+.flash.show  { opacity: 1; }
+.flash.error { background: var(--red); border-color: var(--red); color: #fff; }
 
+/* ─── Edit form row ─────────────────────────────────────────────── */
+.form-actions {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  margin-top: .4rem;
+}
 
+.form-actions a {
+  font-size: .88rem;
+  color: var(--text-2);
+}
 
-  input {
-    width: 100%;
-    margin-bottom: 0.6rem;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-    background-color: #ffffff;
-      box-shadow: 7px 7px 7px #F4C9DA;
-  }
-
-  th, td {
-    border: 1px solid #ddd;
-    padding: 0.75rem;
-    text-align: left;
-  }
-
-  th {
-    background-color: #1f2530;
-      text-align: center;
-      color: white;
-  }
-  #preview {
-      margin-left: 300px;
-  }
-  #editForm div {
-    margin-top: 0.6rem;
-  }
-
-  a[href="#dash"] {
-    color: #007bff;
-    text-decoration: underline;
-  }
-
-  a[href="#dash"]:hover {
-    text-decoration: none;
-  }
+.form-actions a:hover { color: var(--text); }
