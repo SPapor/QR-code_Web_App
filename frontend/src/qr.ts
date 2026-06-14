@@ -3,14 +3,14 @@ import { API_BASE } from './config';
 import { escapeHTML, escapeAttr } from './ui';
 
 export interface QrCode {
-  id: number;
+  id: string;
   name: string;
   link: string;
 }
 
 type ApiError = { detail?: string };
 
-let currentEditId: number | null = null;
+let currentEditId: string | null = null;
 
 export async function fetchAll(): Promise<QrCode[]> {
   const r = await authFetch(`${API_BASE}/qr_code/`);
@@ -25,20 +25,20 @@ export async function createQr(name: string, link: string): Promise<QrCode> {
   return r.json();
 }
 
-export async function updateQr(id: number, name: string, link: string): Promise<QrCode> {
+export async function updateQr(id: string, name: string, link: string): Promise<QrCode> {
   const qs = new URLSearchParams({ name, link });
   const r  = await authFetch(`${API_BASE}/qr_code/${id}?${qs}`, { method: 'PUT' });
   if (!r.ok) throw await r.json();
   return r.json();
 }
 
-export async function deleteQr(id: number): Promise<null> {
+export async function deleteQr(id: string): Promise<null> {
   const r = await authFetch(`${API_BASE}/qr_code/${id}`, { method: 'DELETE' });
   if (!r.ok) throw await r.json();
   return null;
 }
 
-export function qrImageUrl(id: number): string {
+export function qrImageUrl(id: string): string {
   return `${API_BASE}/qr_code/${id}/image`;
 }
 
@@ -76,10 +76,10 @@ export async function loadList(): Promise<void> {
 
 function showPreview(id: string): void {
   const div = document.getElementById('preview');
-  if (div) div.innerHTML = `<img src="${qrImageUrl(Number(id))}" alt="qr full">`;
+  if (div) div.innerHTML = `<img src="${qrImageUrl(id)}" alt="qr full">`;
 }
 
-function openEditView(id: number | null, name = '', link = ''): void {
+function openEditView(id: string | null, name = '', link = ''): void {
   currentEditId = id;
   (document.getElementById('edit-name') as HTMLInputElement).value = name;
   (document.getElementById('edit-link') as HTMLInputElement).value = link;
@@ -114,7 +114,7 @@ export function initQrModule(): void {
         const nameCell = row.children[0] as HTMLElement;
         const linkCell = row.children[1] as HTMLElement;
         openEditView(
-          Number(editId),
+          editId,
           nameCell.textContent ?? '',
           linkCell.querySelector('a')!.href,
         );
@@ -123,7 +123,7 @@ export function initQrModule(): void {
       const delId = target.dataset.delete;
       if (delId) {
         if (!confirm('Are you sure you want to delete this QR code?')) return;
-        deleteQr(Number(delId))
+        deleteQr(delId)
           .then(() => loadList())
           .catch((err: unknown) => alert((err as ApiError)?.detail ?? JSON.stringify(err)));
       }

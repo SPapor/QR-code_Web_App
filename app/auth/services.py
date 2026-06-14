@@ -49,7 +49,7 @@ class AuthService:
     async def refresh(self, refresh_token: str | None):
         if not refresh_token:
             raise RefreshTokenRequiredError
-        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = self.decode_jwt_token(refresh_token)
         if payload.get("token_type") != "refresh":
             raise NotAuthorizedError
         auth_id = payload.get("id")
@@ -104,4 +104,8 @@ class AuthService:
         payload = AuthService.decode_jwt_token(token)
         if payload.get("token_type") != "access":
             raise NotAuthorizedError
-        return AccessTokenPayload(user_id=UUID(payload["user_id"]), username=payload["username"])
+        return AccessTokenPayload(
+            user_id=UUID(payload["user_id"]),
+            username=payload["username"],
+            is_admin=payload.get("is_admin", False),
+        )
