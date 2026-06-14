@@ -17,7 +17,12 @@
     <h1>Welcome back</h1>
     <form id="loginForm" autocomplete="off">
       <input name="username" placeholder="Username" autocomplete="off" required>
-      <input name="password" type="password" placeholder="Password" autocomplete="off" required>
+      <div class="input-wrap">
+        <input name="password" type="password" placeholder="Password" autocomplete="off" required>
+        <button type="button" class="btn-eye" aria-label="Show password" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <button type="submit">Log in</button>
     </form>
     <p>No account? <a href="#reg">Register here</a></p>
@@ -30,7 +35,12 @@
     <h1>Create account</h1>
     <form id="regForm">
       <input name="username" placeholder="Username" autocomplete="username" required>
-      <input name="password" type="password" placeholder="Password" autocomplete="new-password" required>
+      <div class="input-wrap">
+        <input name="password" type="password" placeholder="Password" autocomplete="new-password" required>
+        <button type="button" class="btn-eye" aria-label="Show password" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <button type="submit">Register</button>
     </form>
     <p>Have an account? <a href="#login">Back to login</a></p>
