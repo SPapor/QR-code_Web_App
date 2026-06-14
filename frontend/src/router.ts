@@ -16,8 +16,12 @@ function routeLogin(): void {
   const f = document.getElementById('loginForm') as HTMLFormElement | null;
   if (f) {
     f.reset();
-    (f.elements.namedItem('username') as HTMLInputElement).value = '';
-    (f.elements.namedItem('password') as HTMLInputElement).value = '';
+    // Browser autofill fires asynchronously after the element becomes visible,
+    // overriding synchronous clears. Defer to run after autofill settles.
+    setTimeout(() => {
+      (f.elements.namedItem('username') as HTMLInputElement).value = '';
+      (f.elements.namedItem('password') as HTMLInputElement).value = '';
+    }, 50);
   }
 }
 function routeRegister(): void { showView('view-reg');  }
