@@ -15,8 +15,11 @@ class Settings(BaseSettings):
     API_URL: str = "127.0.0.1:8000"
     QR_CODE_ENDPOINT: str = "/qr_code/{uuid}"
 
-    ADMIN_USERNAME: str = 'q'
-    ADMIN_PASSWORD: str = 'q'
+    CORS_ORIGINS: list[str] = []
+    COOKIE_SECURE: bool = False
+
+    ADMIN_USERNAME: str | None = None
+    ADMIN_PASSWORD: str | None = None
 
 
 settings = Settings()  # noqa
