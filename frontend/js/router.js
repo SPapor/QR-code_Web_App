@@ -21,7 +21,11 @@ function guard () {
   return false;
 }
 
-function routeLogin    () { show('view-login'); }
+function routeLogin () {
+  show('view-login');
+  const f = document.getElementById('loginForm');
+  if (f) { f.reset(); f.username.value = ''; f.password.value = ''; }
+}
 function routeRegister () { show('view-reg');   }
 function routeDash     () { if (guard()) { show('view-dash');  loadList(); } }
 function routeEdit     () { if (guard()) show('view-edit'); }
