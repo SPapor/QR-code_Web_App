@@ -18,5 +18,20 @@ services:
       - backend
     restart: unless-stopped
 
+  urls:
+    image: busybox
+    depends_on:
+      - frontend
+    command: >
+      sh -c '
+        echo "" &&
+        echo "  ┌─────────────────────────────────────────┐" &&
+        echo "  │  Backend   →  http://localhost:8001     │" &&
+        echo "  │  Frontend  →  http://localhost:3000     │" &&
+        echo "  └─────────────────────────────────────────┘" &&
+        echo ""
+      '
+    restart: "no"
+
 volumes:
   db_data:
