@@ -1,12 +1,20 @@
+# pinned so any checkout location (dev dir, CI runner workspace) maps to the
+# same compose project and reuses the same containers and volumes
+name: qr-menu
+
 services:
   backend:
     build:
       context: ./app
     env_file: .env
+    environment:
+      # db_data was historically mounted over /app (shadowing the image code);
+      # it is now mounted at /data, where its root already holds database.sqlite
+      - DB_URI=sqlite+aiosqlite:////data/database.sqlite
     volumes:
-      - db_data:/app
+      - db_data:/data
     ports:
-      - "8001:8000"
+      - "8000:8000"
     restart: unless-stopped
 
   frontend:
@@ -14,6 +22,19 @@ services:
       context: ./frontend
     ports:
       - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: ./bot
+    env_file: .env
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - SESSION_DB_PATH=/data/bot_sessions.sqlite
+    volumes:
+      - bot_data:/data
     depends_on:
       - backend
     restart: unless-stopped
@@ -26,7 +47,7 @@ services:
       sh -c '
         echo "" &&
         echo "  ┌─────────────────────────────────────────┐" &&
-        echo "  │  Backend   →  http://localhost:8001     │" &&
+        echo "  │  Backend   →  http://localhost:8000     │" &&
         echo "  │  Frontend  →  http://localhost:3000     │" &&
         echo "  └─────────────────────────────────────────┘" &&
         echo ""
@@ -35,3 +56,4 @@ services:
 
 volumes:
   db_data:
+  bot_data:
