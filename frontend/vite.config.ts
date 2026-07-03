@@ -1,11 +1,62 @@
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   server: {
     proxy: {
-      '/auth'    : 'http://localhost:8001',
-      '/user'    : 'http://localhost:8001',
-      '/qr_code' : 'http://localhost:8001',
+      '/auth'    : 'http://localhost:8000',
+      '/user'    : 'http://localhost:8000',
+      '/qr_code' : 'http://localhost:8000',
     },
   },
+  plugins: [
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['icons/apple-touch-icon.png'],
+      manifest: {
+        name: 'qr/studio',
+        short_name: 'qr/studio',
+        description: 'Менеджер QR-кодов',
+        lang: 'ru',
+        display: 'standalone',
+        start_url: '/',
+        theme_color: '#0F0E0B',
+        background_color: '#FAF7F2',
+        icons: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        navigateFallback: '/index.html',
+        // API must never be served from cache: auth tokens and QR CRUD go network-only,
+        // except QR images, which are immutable per id and safe to serve stale.
+        navigateFallbackDenylist: [/^\/(qr_code|auth|user)/],
+        runtimeCaching: [
+          {
+            urlPattern: /\/qr_code\/[^/]+\/image$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'qr-images',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+          {
+            urlPattern: /\/(qr_code|auth|user)(\/|$)/,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
+    }),
+  ],
 });
