@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=f'{os.path.dirname(__file__)}/../../.env')
+    model_config = SettingsConfigDict(env_file=f'{os.path.dirname(__file__)}/../../.env', extra='ignore')
 
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
@@ -18,9 +18,12 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = []
     COOKIE_SECURE: bool = False
+    COOKIE_SAMESITE: str = "lax"
 
     ADMIN_USERNAME: str | None = None
     ADMIN_PASSWORD: str | None = None
+
+    BOT_SHARED_SECRET: str | None = None
 
 
 settings = Settings()  # noqa

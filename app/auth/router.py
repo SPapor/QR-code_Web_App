@@ -39,7 +39,7 @@ def token_pair_to_response(access_token: str, refresh_token: str):
         value=refresh_token,
         httponly=True,
         secure=settings.COOKIE_SECURE,
-        samesite="none",
+        samesite=settings.COOKIE_SAMESITE,
         path="/",
         max_age=int(timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES).total_seconds()),
     )
