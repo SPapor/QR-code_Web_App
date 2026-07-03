@@ -9,9 +9,14 @@ type AuthEventType = 'login' | 'logout' | 'refresh';
 
 const ACCESS_KEY = 'access';
 const EXP_KEY    = 'exp';
+const USER_KEY   = 'username';
 
 export function getAccess(): string | null {
   return localStorage.getItem(ACCESS_KEY);
+}
+
+export function getUsername(): string | null {
+  return localStorage.getItem(USER_KEY);
 }
 
 export function isLoggedIn(): boolean {
@@ -29,6 +34,7 @@ export async function login(username: string, password: string): Promise<TokenRe
   if (!r.ok) throw await r.json();
   const data: TokenResponse = await r.json();
   saveTokens(data);
+  localStorage.setItem(USER_KEY, username);
   signal('login');
   return data;
 }
@@ -62,6 +68,7 @@ export async function refreshToken(): Promise<string> {
 export function logout(): void {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(EXP_KEY);
+  localStorage.removeItem(USER_KEY);
   signal('logout');
 }
 

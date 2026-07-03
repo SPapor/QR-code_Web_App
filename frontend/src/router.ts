@@ -1,9 +1,20 @@
-import { login as apiLogin, register as apiRegister, logout as apiLogout, isLoggedIn } from './auth';
+import { login as apiLogin, register as apiRegister, logout as apiLogout, isLoggedIn, getUsername } from './auth';
 import { loadList } from './qr';
+import { flash, apiErr } from './ui';
 
 const VIEWS = [...document.querySelectorAll<HTMLElement>('[data-view]')];
 const hideAll  = () => VIEWS.forEach(v => (v.hidden = true));
-const showView = (id: string) => { hideAll(); const e = document.getElementById(id); if (e) e.hidden = false; };
+const showView = (id: string) => {
+  hideAll();
+  const e = document.getElementById(id);
+  if (e) e.hidden = false;
+  document.body.dataset.route = id;
+};
+
+function syncUser(): void {
+  const box = document.getElementById('user-name');
+  if (box) box.textContent = getUsername() ?? '';
+}
 
 function guard(): boolean {
   if (isLoggedIn()) return true;
@@ -47,36 +58,34 @@ window.addEventListener('load', () => {
   if (isLoggedIn() && (!location.hash || location.hash === '#login')) {
     location.hash = '#dash';
   }
+  syncUser();
   handleRoute();
 });
 
 window.addEventListener('auth', (ev: Event) => {
   const { type } = (ev as CustomEvent<{ type: string }>).detail;
+  syncUser();
   if (type === 'logout') location.hash = '#login';
   if (type === 'login')  location.hash = '#dash';
 });
 
-type ApiError = { detail?: string };
+async function submitAuth(e: Event, action: (u: string, p: string) => Promise<unknown>): Promise<void> {
+  e.preventDefault();
+  const form = e.target as HTMLFormElement;
+  const u = (form.elements.namedItem('username') as HTMLInputElement).value.trim();
+  const p = (form.elements.namedItem('password') as HTMLInputElement).value.trim();
+  const btn = form.querySelector<HTMLButtonElement>('[type="submit"]');
+  if (btn) btn.disabled = true;
+  try { await action(u, p); }
+  catch (err: unknown) { flash(apiErr(err), 'error'); }
+  finally { if (btn) btn.disabled = false; }
+}
 
 (document.getElementById('loginForm') as HTMLFormElement | null)
-  ?.addEventListener('submit', async (e: Event) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const u = (form.elements.namedItem('username') as HTMLInputElement).value.trim();
-    const p = (form.elements.namedItem('password') as HTMLInputElement).value.trim();
-    try { await apiLogin(u, p); }
-    catch (err: unknown) { alert((err as ApiError)?.detail ?? JSON.stringify(err)); }
-  });
+  ?.addEventListener('submit', e => submitAuth(e, apiLogin));
 
 (document.getElementById('regForm') as HTMLFormElement | null)
-  ?.addEventListener('submit', async (e: Event) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const u = (form.elements.namedItem('username') as HTMLInputElement).value.trim();
-    const p = (form.elements.namedItem('password') as HTMLInputElement).value.trim();
-    try { await apiRegister(u, p); }
-    catch (err: unknown) { alert((err as ApiError)?.detail ?? JSON.stringify(err)); }
-  });
+  ?.addEventListener('submit', e => submitAuth(e, apiRegister));
 
 document.getElementById('btn-logout')
   ?.addEventListener('click', () => apiLogout());

@@ -1,90 +1,168 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
   <meta charset="utf-8">
-  <title>QR-Code Manager</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>qr/studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0F0E0B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="qr/studio">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F0E0B'/%3E%3Cpath d='M8 8h6v6H8zM10 10v2h2v-2zM18 8h6v6h-6zM20 10v2h2v-2zM8 18h6v6H8zM10 20v2h2v-2zM18 18h2v2h-2zM22 18h2v2h-2zM20 20h2v2h-2zM18 22h2v2h-2zM22 22h2v2h-2z' fill='%23F7E66F'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
+<!-- Reusable fake-QR glyph (empty state) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="qr" viewBox="0 0 25 25">
+    <rect width="25" height="25" fill="#fff"/>
+    <path d="M0,0h7v7H0zM1,1v5h5V1zM2,2h3v3H2z" fill="#0F0E0B"/>
+    <path d="M18,0h7v7h-7zM19,1v5h5V1zM20,2h3v3h-3z" fill="#0F0E0B"/>
+    <path d="M0,18h7v7H0zM1,19v5h5v-5zM2,20h3v3H2z" fill="#0F0E0B"/>
+    <path d="M17,17h5v5h-5zM18,18v3h3v-3zM19,19h1v1h-1z" fill="#0F0E0B"/>
+    <g fill="#0F0E0B">
+      <rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+      <rect x="12" y="6" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/>
+      <rect x="16" y="6" width="1" height="1"/>
+      <rect x="6" y="8" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/>
+      <rect x="6" y="12" width="1" height="1"/><rect x="6" y="14" width="1" height="1"/>
+      <rect x="6" y="16" width="1" height="1"/>
+      <rect x="9" y="8" width="1" height="1"/><rect x="13" y="8" width="1" height="1"/>
+      <rect x="17" y="8" width="1" height="1"/><rect x="21" y="8" width="1" height="1"/>
+      <rect x="11" y="10" width="1" height="1"/><rect x="15" y="10" width="1" height="1"/>
+      <rect x="19" y="10" width="1" height="1"/><rect x="9" y="12" width="1" height="1"/>
+      <rect x="13" y="12" width="1" height="1"/><rect x="17" y="12" width="1" height="1"/>
+      <rect x="21" y="12" width="1" height="1"/><rect x="11" y="14" width="1" height="1"/>
+      <rect x="15" y="14" width="1" height="1"/><rect x="19" y="14" width="1" height="1"/>
+      <rect x="9" y="16" width="1" height="1"/><rect x="13" y="16" width="1" height="1"/>
+      <rect x="21" y="16" width="1" height="1"/>
+      <rect x="9" y="19" width="1" height="1"/><rect x="12" y="19" width="1" height="1"/>
+      <rect x="15" y="19" width="1" height="1"/><rect x="10" y="21" width="1" height="1"/>
+      <rect x="13" y="21" width="1" height="1"/><rect x="9" y="23" width="1" height="1"/>
+      <rect x="12" y="23" width="1" height="1"/><rect x="15" y="23" width="1" height="1"/>
+    </g>
+  </symbol>
+</svg>
+
+<!-- ── Top bar ───────────────────────────────────────────────────── -->
+<header class="top">
+  <div class="frame top-inner">
+    <a class="wordmark" href="#dash">qr<span class="slash">/</span>studio<span class="dot">.</span></a>
+    <div class="user">
+      <span id="user-name"></span>
+      <button id="btn-logout" type="button">Выйти</button>
+    </div>
+  </div>
+</header>
+
 <!-- ── Login ─────────────────────────────────────────────────────── -->
 <section data-view id="view-login">
-  <div class="auth-card">
-    <h1>Welcome back</h1>
+  <div class="auth">
+    <h1>Welcome <em>back.</em></h1>
+    <p class="auth-sub">Войдите, чтобы управлять своими QR-кодами</p>
     <form id="loginForm" autocomplete="off">
-      <input name="username" placeholder="Username" autocomplete="off" required>
-      <div class="input-wrap">
-        <input name="password" type="password" placeholder="Password" autocomplete="off" required>
-        <button type="button" class="btn-eye" aria-label="Show password" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <button type="submit">Log in</button>
+      <label class="field">
+        <span class="field-label">Логин</span>
+        <input name="username" placeholder="username" autocomplete="off" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Пароль</span>
+        <span class="input-wrap">
+          <input name="password" type="password" placeholder="••••••••" autocomplete="off" required>
+          <button type="button" class="btn-eye" aria-label="Show password" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </span>
+      </label>
+      <button type="submit" class="btn-primary btn-block">Войти</button>
     </form>
-    <p>No account? <a href="#reg">Register here</a></p>
+    <p class="auth-alt">Нет аккаунта? <a href="#reg">Создать</a></p>
   </div>
 </section>
 
 <!-- ── Register ──────────────────────────────────────────────────── -->
 <section data-view id="view-reg" hidden>
-  <div class="auth-card">
-    <h1>Create account</h1>
+  <div class="auth">
+    <h1>Create <em>account.</em></h1>
+    <p class="auth-sub">Минута — и ваши QR-коды под контролем</p>
     <form id="regForm">
-      <input name="username" placeholder="Username" autocomplete="username" required>
-      <div class="input-wrap">
-        <input name="password" type="password" placeholder="Password" autocomplete="new-password" required>
-        <button type="button" class="btn-eye" aria-label="Show password" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <button type="submit">Register</button>
+      <label class="field">
+        <span class="field-label">Логин</span>
+        <input name="username" placeholder="username" autocomplete="username" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Пароль</span>
+        <span class="input-wrap">
+          <input name="password" type="password" placeholder="••••••••" autocomplete="new-password" required>
+          <button type="button" class="btn-eye" aria-label="Show password" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </span>
+      </label>
+      <button type="submit" class="btn-primary btn-block">Создать аккаунт</button>
     </form>
-    <p>Have an account? <a href="#login">Back to login</a></p>
+    <p class="auth-alt">Уже есть аккаунт? <a href="#login">Войти</a></p>
   </div>
 </section>
 
 <!-- ── Dashboard ─────────────────────────────────────────────────── -->
 <section data-view id="view-dash" hidden>
-  <header class="topbar">
-    <h1>Your QR codes</h1>
-    <button id="btn-logout" class="btn-ghost">Logout</button>
-  </header>
-
-  <button id="btn-new" class="btn-primary">+ New QR</button>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Link</th>
-          <th>QR</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="list"><tr><td colspan="4">Loading…</td></tr></tbody>
-    </table>
-  </div>
-
-  <div id="preview"></div>
-</section>
-
-<!-- ── Edit ───────────────────────────────────────────────────────── -->
-<section data-view id="view-edit" hidden>
-  <h1>Edit QR</h1>
-  <form id="editForm">
-    <input id="edit-name" placeholder="Name" required>
-    <input id="edit-link" placeholder="Link (https://…)" required>
-    <div class="form-actions">
-      <button type="submit" class="btn-primary">Save</button>
-      <a href="#dash">Cancel</a>
+  <div class="frame">
+    <div class="head">
+      <div>
+        <h1>Your <em>codes.</em></h1>
+        <span class="stat-line"><strong id="qr-count">—</strong>&nbsp;<span id="qr-count-word">кодов</span></span>
+      </div>
+      <button id="btn-new" class="btn-primary" type="button">
+        + Новый код
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
     </div>
-  </form>
+    <div id="list" class="list"></div>
+  </div>
 </section>
+
+<!-- ── Edit / create ─────────────────────────────────────────────── -->
+<section data-view id="view-edit" hidden>
+  <div class="edit">
+    <h1 id="edit-title">New <em>code.</em></h1>
+    <form id="editForm">
+      <label class="field">
+        <span class="field-label">Название</span>
+        <input id="edit-name" placeholder="Menu · Mosaico" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Ссылка</span>
+        <input id="edit-link" placeholder="https://…" required>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Сохранить</button>
+        <a href="#dash">Отмена</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ── QR modal ──────────────────────────────────────────────────── -->
+<div id="qr-modal" class="modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <figure class="modal-card" role="dialog" aria-modal="true" aria-label="QR-код">
+    <button class="modal-close" type="button" data-close aria-label="Закрыть">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <img id="modal-img" alt="QR-код">
+    <figcaption>
+      <div id="modal-name" class="modal-name"></div>
+      <a id="modal-link" class="modal-link" target="_blank" rel="noopener"></a>
+    </figcaption>
+    <a id="modal-download" class="btn-primary btn-block" download>Скачать PNG</a>
+  </figure>
+</div>
 
 <script type="module" src="/src/main.ts"></script>
 </body>

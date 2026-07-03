@@ -1,6 +1,6 @@
 import { authFetch } from './auth';
 import { API_BASE } from './config';
-import { escapeHTML, escapeAttr } from './ui';
+import { escapeHTML, escapeAttr, flash, apiErr } from './ui';
 
 export interface QrCode {
   id: string;
@@ -8,9 +8,10 @@ export interface QrCode {
   link: string;
 }
 
-type ApiError = { detail?: string };
-
+let items: QrCode[] = [];
 let currentEditId: string | null = null;
+
+/* ── API ─────────────────────────────────────────────────────── */
 
 export async function fetchAll(): Promise<QrCode[]> {
   const r = await authFetch(`${API_BASE}/qr_code/`);
@@ -42,45 +43,117 @@ export function qrImageUrl(id: string): string {
   return `${API_BASE}/qr_code/${id}/image`;
 }
 
-export async function loadList(): Promise<void> {
-  const tbody = document.getElementById('list');
-  if (!tbody) return;
+/* ── Rendering ───────────────────────────────────────────────── */
 
-  tbody.innerHTML = '<tr><td colspan="4">Loading…</td></tr>';
+const ICON_OPEN = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v7H3V3h7"/></svg>`;
+const ICON_EDIT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+const ICON_TRASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`;
+
+function pluralCodes(n: number): string {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return 'код';
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'кода';
+  return 'кодов';
+}
+
+function updateCount(n: number | null): void {
+  const num  = document.getElementById('qr-count');
+  const word = document.getElementById('qr-count-word');
+  if (num)  num.textContent  = n == null ? '—' : String(n);
+  if (word) word.textContent = pluralCodes(n ?? 0);
+}
+
+function displayLink(link: string): string {
+  return link.replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+
+function skeletonHtml(): string {
+  return Array.from({ length: 3 }, (_, i) => `
+    <div class="row skeleton" style="--i:${i}">
+      <div class="n">··</div>
+      <span class="sk sk-box"></span>
+      <div class="name"><span class="sk" style="width:${45 + i * 12}%"></span></div>
+      <div class="link"><span class="sk" style="width:${60 - i * 10}%"></span></div>
+      <div class="actions"><span class="sk sk-pill"></span></div>
+    </div>`).join('');
+}
+
+function emptyHtml(): string {
+  return `
+    <div class="empty">
+      <div class="icon"><svg width="52" height="52"><use href="#qr"/></svg></div>
+      <h2>Пока пусто.</h2>
+      <p>Создайте первый QR-код — это займёт меньше минуты.</p>
+      <button class="btn-primary" type="button" data-new>+ Создать код</button>
+    </div>`;
+}
+
+function rowHtml(q: QrCode, i: number): string {
+  return `
+    <div class="row" data-id="${escapeAttr(String(q.id))}" style="--i:${i}">
+      <div class="n">${String(i + 1).padStart(2, '0')}</div>
+      <button class="qr-thumb" type="button" data-open title="Открыть QR">
+        <img src="${qrImageUrl(q.id)}" alt="" loading="lazy">
+      </button>
+      <div class="name">${escapeHTML(q.name)}</div>
+      <div class="link"><a href="${escapeAttr(q.link)}" target="_blank" rel="noopener">${escapeHTML(displayLink(q.link))}</a></div>
+      <div class="actions">
+        <button class="btn-icon" type="button" data-open title="Открыть QR" aria-label="Открыть QR">${ICON_OPEN}</button>
+        <button class="btn-icon" type="button" data-edit title="Редактировать" aria-label="Редактировать">${ICON_EDIT}</button>
+        <button class="btn-icon danger" type="button" data-delete title="Удалить" aria-label="Удалить">${ICON_TRASH}</button>
+      </div>
+    </div>`;
+}
+
+export async function loadList(): Promise<void> {
+  const list = document.getElementById('list');
+  if (!list) return;
+
+  list.innerHTML = skeletonHtml();
+  updateCount(null);
   try {
-    const data = await fetchAll();
-    if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4">No QR-codes yet</td></tr>';
-      return;
-    }
-    tbody.innerHTML = '';
-    data.forEach(q => {
-      const clean = q.link.replace(/^https?:\/\//, '');
-      const display = escapeHTML(clean.length > 20 ? clean.slice(0, 20) + '...' : clean);
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${escapeHTML(q.name)}</td>
-        <td><a href="${escapeAttr(q.link)}" target="_blank">${display}</a></td>
-        <td><img src="${qrImageUrl(q.id)}" alt="qr" width="64"></td>
-        <td>
-          <button class="btn-ghost"   data-edit="${q.id}">Edit</button>
-          <button class="btn-danger" data-delete="${q.id}">Delete</button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
+    items = await fetchAll();
+    updateCount(items.length);
+    list.innerHTML = items.length === 0
+      ? emptyHtml()
+      : items.map(rowHtml).join('');
   } catch (err: unknown) {
-    const msg = (err as ApiError)?.detail ?? String(err);
-    tbody.innerHTML = `<tr><td colspan="4">Error: ${escapeHTML(msg)}</td></tr>`;
+    list.innerHTML = `<div class="list-state">Ошибка: ${escapeHTML(apiErr(err))}</div>`;
   }
 }
 
-function showPreview(id: string): void {
-  const div = document.getElementById('preview');
-  if (div) div.innerHTML = `<img src="${qrImageUrl(id)}" alt="qr full">`;
+/* ── QR modal ────────────────────────────────────────────────── */
+
+function openModal(q: QrCode): void {
+  const modal = document.getElementById('qr-modal');
+  if (!modal) return;
+  (document.getElementById('modal-img') as HTMLImageElement).src = qrImageUrl(q.id);
+  document.getElementById('modal-name')!.textContent = q.name;
+
+  const link = document.getElementById('modal-link') as HTMLAnchorElement;
+  link.href = q.link;
+  link.textContent = displayLink(q.link);
+
+  const dl = document.getElementById('modal-download') as HTMLAnchorElement;
+  dl.href = qrImageUrl(q.id);
+  dl.download = (q.name.replace(/[^\wа-яё \-]+/gi, '').trim() || 'qr') + '.png';
+
+  modal.hidden = false;
+  document.body.classList.add('modal-open');
 }
+
+function closeModal(): void {
+  const modal = document.getElementById('qr-modal');
+  if (modal) modal.hidden = true;
+  document.body.classList.remove('modal-open');
+}
+
+/* ── Edit view ───────────────────────────────────────────────── */
 
 function openEditView(id: string | null, name = '', link = ''): void {
   currentEditId = id;
+  const title = document.getElementById('edit-title');
+  if (title) title.innerHTML = id != null ? 'Edit <em>code.</em>' : 'New <em>code.</em>';
   (document.getElementById('edit-name') as HTMLInputElement).value = name;
   (document.getElementById('edit-link') as HTMLInputElement).value = link;
   location.hash = '#edit' + (id != null ? `?id=${id}` : '');
@@ -90,50 +163,55 @@ async function handleEditSubmit(evt: Event): Promise<void> {
   evt.preventDefault();
   const name = (document.getElementById('edit-name') as HTMLInputElement).value.trim();
   const link = (document.getElementById('edit-link') as HTMLInputElement).value.trim();
-  if (!name || !link) { alert('Both fields required'); return; }
+  if (!name || !link) { flash('Заполните оба поля', 'error'); return; }
 
+  const btn = (evt.target as HTMLFormElement).querySelector<HTMLButtonElement>('[type="submit"]');
+  if (btn) btn.disabled = true;
   try {
     if (currentEditId != null) await updateQr(currentEditId, name, link);
     else                       await createQr(name, link);
+    flash(currentEditId != null ? 'Сохранено' : 'Код создан');
     location.hash = '#dash';
     await loadList();
   } catch (err: unknown) {
-    alert((err as ApiError)?.detail ?? JSON.stringify(err));
+    flash(apiErr(err), 'error');
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
+/* ── Wiring ──────────────────────────────────────────────────── */
+
 export function initQrModule(): void {
-  const tbody = document.getElementById('list');
-  if (tbody) {
-    tbody.addEventListener('click', e => {
-      const target = e.target as HTMLElement;
+  const list = document.getElementById('list');
 
-      const editId = target.dataset.edit;
-      if (editId) {
-        const row = target.closest('tr')!;
-        const nameCell = row.children[0] as HTMLElement;
-        const linkCell = row.children[1] as HTMLElement;
-        openEditView(
-          editId,
-          nameCell.textContent ?? '',
-          linkCell.querySelector('a')!.href,
-        );
+  list?.addEventListener('click', e => {
+    const t = e.target as HTMLElement;
+
+    if (t.closest('[data-new]')) { openEditView(null); return; }
+
+    const row = t.closest<HTMLElement>('.row');
+    if (!row?.dataset.id) return;
+    const q = items.find(x => String(x.id) === row.dataset.id);
+    if (!q) return;
+
+    if (t.closest('[data-open]')) { openModal(q); return; }
+    if (t.closest('[data-edit]')) { openEditView(q.id, q.name, q.link); return; }
+
+    const del = t.closest<HTMLElement>('[data-delete]');
+    if (del) {
+      // two-step delete: first click arms the button, second confirms
+      if (!del.classList.contains('arm')) {
+        del.classList.add('arm');
+        flash('Нажмите ещё раз, чтобы удалить', 'info', 2200);
+        setTimeout(() => del.classList.remove('arm'), 2400);
+        return;
       }
-
-      const delId = target.dataset.delete;
-      if (delId) {
-        if (!confirm('Are you sure you want to delete this QR code?')) return;
-        deleteQr(delId)
-          .then(() => loadList())
-          .catch((err: unknown) => alert((err as ApiError)?.detail ?? JSON.stringify(err)));
-      }
-    });
-
-    tbody.addEventListener('mouseover', e => {
-      const img = (e.target as HTMLElement).closest('tr')?.querySelector('img');
-      if (img) showPreview(img.src.split('/').slice(-2, -1)[0]);
-    });
-  }
+      deleteQr(String(q.id))
+        .then(() => { flash('Код удалён'); return loadList(); })
+        .catch((err: unknown) => flash(apiErr(err), 'error'));
+    }
+  });
 
   document.getElementById('btn-new')
     ?.addEventListener('click', () => openEditView(null));
@@ -141,8 +219,16 @@ export function initQrModule(): void {
   document.getElementById('editForm')
     ?.addEventListener('submit', handleEditSubmit);
 
+  document.getElementById('qr-modal')?.addEventListener('click', e => {
+    if ((e.target as HTMLElement).closest('[data-close]')) closeModal();
+  });
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
   window.addEventListener('auth', (ev: Event) => {
     const { type } = (ev as CustomEvent<{ type: string }>).detail;
     if (type === 'login' || type === 'refresh') loadList();
+    if (type === 'logout') closeModal();
   });
 }

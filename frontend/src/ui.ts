@@ -45,6 +45,20 @@ export function flash(msg: string, type: 'info' | 'error' = 'info', ms = 2500): 
   if (ms > 0) setTimeout(() => { box!.classList.remove('show'); box!.hidden = true; }, ms);
 }
 
+/** Human-readable message from an API error (FastAPI detail: string | validation array). */
+export function apiErr(err: unknown): string {
+  if (err && typeof err === 'object' && 'detail' in err) {
+    const d = (err as { detail: unknown }).detail;
+    if (typeof d === 'string') return d;
+    if (Array.isArray(d)) {
+      const msgs = d.map(x => (x as { msg?: string })?.msg ?? '').filter(Boolean);
+      if (msgs.length) return msgs.join('; ');
+    }
+  }
+  if (err instanceof Error) return err.message;
+  return 'Что-то пошло не так';
+}
+
 export function escapeHTML(s = ''): string {
   return s.replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
