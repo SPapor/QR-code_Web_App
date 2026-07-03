@@ -1,4 +1,4 @@
-from dishka.integrations.fastapi import inject, FromDishka
+from dishka.integrations.fastapi import FromDishka, inject
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

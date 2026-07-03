@@ -27,6 +27,7 @@ def password():
 def password_hash(password):
     return AuthService.get_password_hash(password)
 
+
 @pytest.fixture
 def auth(password_hash):
     return Auth(user_id=uuid.uuid4(), username='test_auth_user', password_hash=password_hash)

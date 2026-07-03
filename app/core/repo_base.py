@@ -19,10 +19,7 @@ def handle_exceptions(func):
             raise self.entity_cls.NotFoundError
         except sqlalchemy.exc.IntegrityError as e:
             orig = e.orig
-            is_unique = (
-                'UNIQUE constraint failed' in str(orig)
-                or getattr(orig, 'pgcode', None) == '23505'
-            )
+            is_unique = 'UNIQUE constraint failed' in str(orig) or getattr(orig, 'pgcode', None) == '23505'
             if is_unique:
                 raise self.entity_cls.AlreadyExistError
             raise

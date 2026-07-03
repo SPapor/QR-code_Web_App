@@ -14,28 +14,20 @@ class TelegramLinkCrud(CrudBase[int, DTO]):
     table = telegram_link_table
 
     async def get_by_telegram_id(self, telegram_id: int) -> DTO | None:
-        res = await self.session.execute(
-            select(self.table).where(self.table.c.telegram_id == telegram_id)
-        )
+        res = await self.session.execute(select(self.table).where(self.table.c.telegram_id == telegram_id))
         return res.mappings().one_or_none()
 
     async def get_by_user_id(self, user_id: UUID) -> DTO | None:
-        res = await self.session.execute(
-            select(self.table).where(self.table.c.user_id == user_id)
-        )
+        res = await self.session.execute(select(self.table).where(self.table.c.user_id == user_id))
         return res.mappings().one_or_none()
 
     async def update_user_id(self, telegram_id: int, user_id: UUID) -> None:
         await self.session.execute(
-            update(self.table)
-            .where(self.table.c.telegram_id == telegram_id)
-            .values(user_id=user_id)
+            update(self.table).where(self.table.c.telegram_id == telegram_id).values(user_id=user_id)
         )
 
     async def delete_by_telegram_id(self, telegram_id: int) -> None:
-        await self.session.execute(
-            delete(self.table).where(self.table.c.telegram_id == telegram_id)
-        )
+        await self.session.execute(delete(self.table).where(self.table.c.telegram_id == telegram_id))
 
 
 class TelegramLinkRepo(RepoBase[int, TelegramLink]):

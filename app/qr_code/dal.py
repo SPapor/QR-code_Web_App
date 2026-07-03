@@ -20,9 +20,7 @@ class QrCodeCrud(CrudBase[UUID, DTO]):
 
     async def transfer_owner(self, from_user_id: UUID, to_user_id: UUID) -> None:
         await self.session.execute(
-            update(self.table)
-            .where(self.table.c.user_id == from_user_id)
-            .values(user_id=to_user_id)
+            update(self.table).where(self.table.c.user_id == from_user_id).values(user_id=to_user_id)
         )
 
 

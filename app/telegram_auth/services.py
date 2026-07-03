@@ -54,9 +54,7 @@ class TelegramAuthService:
 
         current_link = await self._link_repo.get_by_telegram_id(telegram_id)
         if current_link is None:
-            await self._link_repo.create(
-                TelegramLink(telegram_id=telegram_id, user_id=target_auth.user_id)
-            )
+            await self._link_repo.create(TelegramLink(telegram_id=telegram_id, user_id=target_auth.user_id))
         elif current_link.user_id != target_auth.user_id:
             await self._qr_code_repo.transfer_owner(current_link.user_id, target_auth.user_id)
             old_user_id = current_link.user_id
