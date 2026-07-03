@@ -17,6 +17,10 @@ class AuthCrud(CrudBase[UUID, DTO]):
         res = await self.session.execute(select(self.table).where(self.table.c.username == username))
         return res.mappings().one()
 
+    async def get_by_user_id(self, user_id: UUID) -> DTO:
+        res = await self.session.execute(select(self.table).where(self.table.c.user_id == user_id))
+        return res.mappings().one()
+
 
 class AuthRepo(RepoBase[UUID, Auth]):
     crud: AuthCrud
@@ -26,4 +30,8 @@ class AuthRepo(RepoBase[UUID, Auth]):
 
     async def get_by_username(self, username: str) -> Auth:
         dto = await self.crud.get_by_username(username)
+        return self.serializer.deserialize(dto)
+
+    async def get_by_user_id(self, user_id: UUID) -> Auth:
+        dto = await self.crud.get_by_user_id(user_id)
         return self.serializer.deserialize(dto)
