@@ -15,9 +15,9 @@ docker compose up -d --build
 # backend dev server (from app/, uses app/.venv)
 cd app && .venv/bin/uvicorn main:app --reload
 
-# tests (51 tests, in-memory sqlite; run from repo root)
+# tests (74 tests, in-memory sqlite; run from repo root)
 app/.venv/bin/python -m pytest tests -q
-app/.venv/bin/python -m pytest tests/test_auth/test_login.py -q   # single file
+app/.venv/bin/python -m pytest tests/test_auth/test_auth_api.py -q   # single file
 
 # lint/format (repo root, targets ./app ./tests)
 make lint    # autoflake + isort + black
@@ -59,10 +59,11 @@ Aiogram bot talking to the backend over the docker network (`BACKEND_URL=http://
 
 ## Deployment flow
 
-- `dev` branch — work happens here; CI (`.github/workflows/pr-checks.yaml`) runs pytest + frontend build on every push (lint jobs are advisory).
+- `dev` branch — work happens here; CI (`.github/workflows/pr-checks.yaml`) runs pytest + frontend build on every push (black/isort lint checks are advisory, flake8 is enforced).
 - `master` — merging/pushing triggers `.github/workflows/deploy.yml` on a **self-hosted runner on this machine**: checkout → copy prod env from `~/.config/qr-menu/.env` → `docker compose up -d --build` → smoke check. Deploys happen **only** from master.
 - Compose project name is pinned (`name: qr-menu` in docker-compose.yml) so any checkout dir reuses the same containers/volumes. The sqlite DB lives in the `db_data` volume mounted at `/data` (never mount it over `/app` — it will shadow the image code).
 - `.env` at repo root is gitignored and holds real secrets; after changing it, also update `~/.config/qr-menu/.env` (used by deploys).
+- The `db_backup` compose service snapshots the sqlite DB daily (`app/backup_db.py`, online backup API, keeps 14) into `~/qr-menu-backups` on the host (override with `QR_BACKUP_DIR`).
 
 ## Conventions
 

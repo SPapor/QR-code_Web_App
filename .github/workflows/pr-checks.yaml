@@ -5,20 +5,31 @@ on:
     branches: [dev]
 
 jobs:
-  black:
+  lint:
     runs-on: ubuntu-latest
-    continue-on-error: true
+    continue-on-error: ${{ matrix.advisory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - check: check-black
+            advisory: true
+          - check: check-isort
+            advisory: true
+          - check: check-flake8
+            advisory: false
+    name: ${{ matrix.check }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
@@ -29,61 +40,8 @@ jobs:
       - name: Copy ci-env
         run: cp ci-env .env
 
-      - name: Check Black
-        run: make check-black
-
-  isort:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-
-      - name: Install dev dependencies
-        run: pip install -r requirements-dev.txt
-
-      - name: Copy ci-env
-        run: cp ci-env .env
-
-      - name: Check isort
-        run: make check-isort
-
-  flake8:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-
-      - name: Install dev dependencies
-        run: pip install -r requirements-dev.txt
-
-      - name: Copy ci-env
-        run: cp ci-env .env
-
-      - name: Check Flake8
-        run: make check-flake8
+      - name: Run ${{ matrix.check }}
+        run: make ${{ matrix.check }}
 
   pytest:
     runs-on: ubuntu-latest
@@ -92,12 +50,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}

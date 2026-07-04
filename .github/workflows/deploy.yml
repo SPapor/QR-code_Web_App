@@ -23,9 +23,16 @@ jobs:
 
       - name: Smoke check
         run: |
-          sleep 5
-          curl -fsS -o /dev/null http://localhost:3000/
-          curl -fsS -o /dev/null http://localhost:8000/docs
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://localhost:8000/docs && curl -fsS -o /dev/null http://localhost:3000/; then
+              echo "smoke check passed"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "smoke check failed after 60s"
+          docker compose ps
+          exit 1
 
       - name: Prune dangling images
         run: docker image prune -f
