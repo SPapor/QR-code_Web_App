@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import logging
 from contextlib import asynccontextmanager, suppress
 
 from dishka import AsyncContainer, Scope, make_async_container
@@ -33,6 +34,8 @@ from user.models import User
 from user.providers import UserProvider
 from user.router import router as user_router
 from user.services import UserService
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
 @asynccontextmanager

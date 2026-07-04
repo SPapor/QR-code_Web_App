@@ -66,7 +66,7 @@ class GoogleAuthService:
         link = await self._link_repo.get_by_sub(google_sub)
         if link is not None:
             auth = await self._auth_repo.get_by_user_id(link.user_id)
-            return self._auth_service.create_access_refresh_token_pair(auth)
+            return await self._auth_service.issue_token_pair(auth)
 
         username = email
         if await self._user_repo.crud.get_by_username(username) is not None:
@@ -75,7 +75,7 @@ class GoogleAuthService:
         password = secrets.token_urlsafe(32)
         auth = await self._auth_service.create_auth(user.id, username, password)
         await self._link_repo.create(GoogleLink(google_sub=google_sub, user_id=user.id, email=email))
-        return self._auth_service.create_access_refresh_token_pair(auth)
+        return await self._auth_service.issue_token_pair(auth)
 
     async def _fetch_id_token_claims(self, code: str) -> dict:
         data = {

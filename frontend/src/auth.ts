@@ -65,6 +65,8 @@ export async function refreshToken(): Promise<string> {
 }
 
 export function logout(): void {
+  // revoke the refresh session server-side; best-effort, don't block the UI
+  void fetch(`${API_BASE}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(EXP_KEY);
   localStorage.removeItem(USER_KEY);

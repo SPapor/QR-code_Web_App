@@ -13,5 +13,5 @@ class UserService:
     async def register(self, username: str, password: str) -> tuple[str, str]:
         user = await self.user_repo.create_and_get(User(username=username))
         auth = await self.auth_service.create_auth(user.id, username, password)
-        access_token, refresh_token = self.auth_service.create_access_refresh_token_pair(auth)
+        access_token, refresh_token = await self.auth_service.issue_token_pair(auth)
         return access_token, refresh_token

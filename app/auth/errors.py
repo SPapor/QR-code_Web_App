@@ -19,3 +19,7 @@ class RefreshTokenRequiredError(AuthError):
 
 class AdminRightsRequiredError(AuthError):
     pass
+
+
+class TooManyLoginAttemptsError(AuthError):
+    pass

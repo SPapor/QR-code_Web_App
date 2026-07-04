@@ -66,14 +66,14 @@ class TelegramAuthService:
         link = await self._link_repo.get_by_telegram_id(telegram_id)
         if link is not None:
             auth = await self._auth_repo.get_by_user_id(link.user_id)
-            return self._auth_service.create_access_refresh_token_pair(auth)
+            return await self._auth_service.issue_token_pair(auth)
 
         username = self._auto_username(telegram_id)
         user = await self._user_repo.create_and_get(User(username=username))
         password = secrets.token_urlsafe(32)
         auth = await self._auth_service.create_auth(user.id, username, password)
         await self._link_repo.create(TelegramLink(telegram_id=telegram_id, user_id=user.id))
-        return self._auth_service.create_access_refresh_token_pair(auth)
+        return await self._auth_service.issue_token_pair(auth)
 
     async def login_via_widget(self, data: dict[str, str]) -> tuple[str, str]:
         if not settings.BOT_TOKEN:
@@ -122,7 +122,7 @@ class TelegramAuthService:
             await self._link_repo.update_user_id(telegram_id, target_auth.user_id)
             await self._delete_auto_account(old_user_id)
 
-        return self._auth_service.create_access_refresh_token_pair(target_auth)
+        return await self._auth_service.issue_token_pair(target_auth)
 
     async def _delete_auto_account(self, user_id) -> None:
         try:

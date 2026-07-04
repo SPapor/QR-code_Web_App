@@ -51,7 +51,9 @@ def login_username(test_client, refresh_token: str) -> str:
     return AuthService.decode_access_token(response.json()['access_token']).username
 
 
-def test_google_login_disabled_returns_404(test_client):
+def test_google_login_disabled_returns_404(test_client, monkeypatch):
+    monkeypatch.setattr(settings, 'GOOGLE_CLIENT_ID', None)
+    monkeypatch.setattr(settings, 'GOOGLE_CLIENT_SECRET', None)
     response = test_client.get('/auth/google/login', follow_redirects=False)
     assert response.status_code == 404, response.json()
 

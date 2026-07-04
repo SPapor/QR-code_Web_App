@@ -35,12 +35,17 @@ def auth(password_hash):
 
 @pytest_asyncio.fixture
 async def auth_in_db(auth_repo, auth, session):
-    return await auth_repo.create_and_get(auth)
+    auth = await auth_repo.create_and_get(auth)
+    # commit so that request-scoped sessions (and their rollbacks) can't discard the fixture
+    await session.commit()
+    return auth
 
 
-@pytest.fixture
-def token_pair(auth_service, auth_in_db):
-    return auth_service.create_access_refresh_token_pair(auth_in_db)
+@pytest_asyncio.fixture
+async def token_pair(auth_service, auth_in_db, session):
+    pair = await auth_service.issue_token_pair(auth_in_db)
+    await session.commit()
+    return pair
 
 
 @pytest.fixture

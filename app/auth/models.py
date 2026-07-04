@@ -12,3 +12,10 @@ class Auth(Model):
     username: str
     password_hash: str
     is_admin: bool = False
+
+
+@dataclass(kw_only=True)
+class RefreshSession(Model):
+    id: UUID = field(default_factory=uuid.uuid4)
+    auth_id: UUID
+    expires_at: int

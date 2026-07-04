@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
-from auth.models import Auth
-from auth.tables import auth_table
+from auth.models import Auth, RefreshSession
+from auth.tables import auth_table, refresh_session_table
 from core.crud_base import CrudBase
 from core.repo_base import RepoBase
 from core.serializer import Serializer
@@ -35,3 +35,20 @@ class AuthRepo(RepoBase[UUID, Auth]):
     async def get_by_user_id(self, user_id: UUID) -> Auth:
         dto = await self.crud.get_by_user_id(user_id)
         return self.serializer.deserialize(dto)
+
+
+class RefreshSessionCrud(CrudBase[UUID, DTO]):
+    table = refresh_session_table
+
+    async def delete_expired(self, now: int) -> None:
+        await self.session.execute(delete(self.table).where(self.table.c.expires_at < now))
+
+
+class RefreshSessionRepo(RepoBase[UUID, RefreshSession]):
+    crud: RefreshSessionCrud
+
+    def __init__(self, crud: RefreshSessionCrud, serializer: Serializer[RefreshSession, DTO]):
+        super().__init__(crud, serializer, RefreshSession)
+
+    async def delete_expired(self, now: int) -> None:
+        await self.crud.delete_expired(now)

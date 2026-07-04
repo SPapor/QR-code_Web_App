@@ -1,3 +1,5 @@
+import logging
+
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Depends
@@ -9,6 +11,8 @@ from auth.router import set_refresh_cookie
 from core.dependencies import auto_commit
 from google_auth.errors import GoogleAuthError
 from google_auth.services import GoogleAuthService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(route_class=DishkaRoute)
 
@@ -30,7 +34,8 @@ async def google_callback(
     try:
         google_auth_service.verify_state(params.get("state"))
         access_token, refresh_token = await google_auth_service.login_with_code(params["code"])
-    except GoogleAuthError:
+    except GoogleAuthError as e:
+        logger.warning("google oauth callback failed: %s", type(e).__name__)
         return RedirectResponse(url="/?oauth=error")
     response = RedirectResponse(url="/?oauth=ok")
     set_refresh_cookie(response, refresh_token)

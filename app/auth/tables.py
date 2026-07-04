@@ -1,4 +1,4 @@
-from sqlalchemy import UUID, Boolean, Column, String, Table
+from sqlalchemy import UUID, BigInteger, Boolean, Column, String, Table
 
 from core.database import metadata
 
@@ -10,4 +10,12 @@ auth_table = Table(
     Column("username", String, unique=True, index=True, nullable=False),
     Column("password_hash", String, nullable=False),
     Column("is_admin", Boolean, nullable=False),
+)
+
+refresh_session_table = Table(
+    "refresh_session",
+    metadata,
+    Column("id", UUID, primary_key=True),
+    Column("auth_id", UUID, index=True, nullable=False),
+    Column("expires_at", BigInteger, nullable=False),
 )

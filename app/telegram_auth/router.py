@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -15,6 +16,8 @@ from core.settings import settings
 from telegram_auth.dependencies import require_bot_secret
 from telegram_auth.errors import TelegramAuthError
 from telegram_auth.services import LINK_CODE_TTL_SECONDS, TelegramAuthService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(route_class=DishkaRoute, dependencies=[Depends(require_bot_secret)])
 # widget callback and link-code issuing are called by browsers, not by the bot
@@ -62,7 +65,8 @@ async def widget_callback(
 ):
     try:
         access_token, refresh_token = await telegram_auth_service.login_via_widget(dict(request.query_params))
-    except TelegramAuthError:
+    except TelegramAuthError as e:
+        logger.warning("telegram widget callback failed: %s", type(e).__name__)
         return RedirectResponse(url="/?oauth=error")
     response = RedirectResponse(url="/?oauth=ok")
     set_refresh_cookie(response, refresh_token)
