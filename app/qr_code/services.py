@@ -1,16 +1,19 @@
 import time
+from collections import Counter
+from datetime import datetime, timedelta, timezone
 from typing import Sequence
 from uuid import UUID
 
 from PIL import Image
 
-from qr_code.dal import QrCodeRepo
-from qr_code.models import QrCode
+from qr_code.dal import QrCodeRepo, ScanEventRepo
+from qr_code.models import QrCode, ScanEvent
 
 
 class QrCodeService:
-    def __init__(self, qr_code_repo: QrCodeRepo):
+    def __init__(self, qr_code_repo: QrCodeRepo, scan_event_repo: ScanEventRepo):
         self.qr_code_repo = qr_code_repo
+        self.scan_event_repo = scan_event_repo
 
     async def get_image_by_qr_code_id(self, id: UUID, box_size: int = 10) -> Image.Image:
         qr_code = await self.qr_code_repo.get_by_id(id)
@@ -41,8 +44,27 @@ class QrCodeService:
 
     async def register_scan(self, id: UUID) -> QrCode:
         qr_code = await self.qr_code_repo.get_by_id(id)
-        await self.qr_code_repo.increment_scan_count(id, int(time.time()))
+        now = int(time.time())
+        await self.qr_code_repo.increment_scan_count(id, now)
+        await self.scan_event_repo.create(ScanEvent(qr_code_id=id, ts=now))
         return qr_code
+
+    async def get_scan_stats(self, user_id: UUID, qr_code_id: UUID, days: int = 30) -> dict:
+        qr_code = await self.qr_code_repo.get_by_id(qr_code_id)
+        if qr_code.user_id != user_id:
+            raise QrCode.NotFoundError
+
+        today = datetime.now(timezone.utc).date()
+        first_day = today - timedelta(days=days - 1)
+        since = int(datetime(first_day.year, first_day.month, first_day.day, tzinfo=timezone.utc).timestamp())
+        timestamps = await self.scan_event_repo.get_ts_since(qr_code_id, since)
+        by_day = Counter(datetime.fromtimestamp(ts, tz=timezone.utc).date() for ts in timestamps)
+        day_range = (first_day + timedelta(days=i) for i in range(days))
+        return {
+            "days": [{"date": day.isoformat(), "count": by_day.get(day, 0)} for day in day_range],
+            "total": qr_code.scan_count,
+            "last_scan_at": qr_code.last_scan_at,
+        }
 
     async def update_qr_code(self, user_id: UUID, qr_code_id: UUID, name: str, link: str) -> QrCode:
         qr_code = await self.qr_code_repo.get_by_id(qr_code_id)

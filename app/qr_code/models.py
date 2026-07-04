@@ -44,3 +44,10 @@ class QrCode(Model):
         qr.add_data(self.public_url())
         qr.make(fit=True)
         return qr.make_image().to_string()
+
+
+@dataclass(kw_only=True)
+class ScanEvent(Model):
+    id: UUID = field(default_factory=uuid.uuid4)
+    qr_code_id: UUID
+    ts: int

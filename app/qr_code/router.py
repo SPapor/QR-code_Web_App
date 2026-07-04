@@ -60,6 +60,16 @@ async def delete_qr_code(
     return {"ok": True}
 
 
+@router.get("/{qr_code_id}/stats")
+async def scan_stats(
+    qr_code_id: UUID,
+    qr_code_service: FromDishka[QrCodeService],
+    days: int = Query(30, ge=1, le=90),
+    user_id: UUID = Depends(logged_in_user_id),
+):
+    return await qr_code_service.get_scan_stats(user_id, qr_code_id, days)
+
+
 @router.get("/{qr_code_id}")
 async def redirect(
     qr_code_id: UUID,

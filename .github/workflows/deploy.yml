@@ -24,7 +24,7 @@ jobs:
       - name: Smoke check
         run: |
           for i in $(seq 1 30); do
-            if curl -fsS -o /dev/null http://localhost:8000/docs && curl -fsS -o /dev/null http://localhost:3000/; then
+            if curl -fsS -o /dev/null http://localhost:8000/health && curl -fsS -o /dev/null http://localhost:3000/; then
               echo "smoke check passed"
               exit 0
             fi

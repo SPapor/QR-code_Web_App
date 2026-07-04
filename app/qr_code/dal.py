@@ -7,8 +7,8 @@ from core.crud_base import CrudBase
 from core.repo_base import RepoBase
 from core.serializer import Serializer
 from core.types import DTO
-from qr_code.models import QrCode
-from qr_code.tables import qr_code_table
+from qr_code.models import QrCode, ScanEvent
+from qr_code.tables import qr_code_table, scan_event_table
 
 
 class QrCodeCrud(CrudBase[UUID, DTO]):
@@ -46,3 +46,23 @@ class QrCodeRepo(RepoBase[UUID, QrCode]):
 
     async def increment_scan_count(self, id_: UUID, now: int) -> None:
         await self.crud.increment_scan_count(id_, now)
+
+
+class ScanEventCrud(CrudBase[UUID, DTO]):
+    table = scan_event_table
+
+    async def get_ts_since(self, qr_code_id: UUID, since: int) -> Sequence[int]:
+        res = await self.session.execute(
+            select(self.table.c.ts).where(self.table.c.qr_code_id == qr_code_id, self.table.c.ts >= since)
+        )
+        return [row[0] for row in res.all()]
+
+
+class ScanEventRepo(RepoBase[UUID, ScanEvent]):
+    crud: ScanEventCrud
+
+    def __init__(self, crud: ScanEventCrud, serializer: Serializer[ScanEvent, DTO]):
+        super().__init__(crud, serializer, ScanEvent)
+
+    async def get_ts_since(self, qr_code_id: UUID, since: int) -> Sequence[int]:
+        return await self.crud.get_ts_since(qr_code_id, since)

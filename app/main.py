@@ -67,6 +67,10 @@ def create_app():
         allow_headers=["*"],
     )
 
+    @app.get("/health")
+    async def health():
+        return {"status": "ok"}
+
     app.include_router(qr_code_router, prefix="/qr_code")
     app.include_router(auth_router, prefix="/auth")
     app.include_router(user_router, prefix="/user")

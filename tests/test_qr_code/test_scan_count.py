@@ -53,6 +53,47 @@ def test_image_svg(test_client, qr_code):
     assert b'<svg' in response.content
 
 
+def test_stats_empty(test_client, auth_headers, qr_code):
+    response = test_client.get(f"/qr_code/{qr_code['id']}/stats?days=7", headers=auth_headers)
+    assert response.status_code == 200, response.json()
+    stats = response.json()
+    assert len(stats['days']) == 7
+    assert all(day['count'] == 0 for day in stats['days'])
+    assert stats['total'] == 0
+
+
+def test_stats_counts_today_scans(test_client, auth_headers, qr_code):
+    for _ in range(3):
+        test_client.get(f"/qr_code/{qr_code['id']}", follow_redirects=False)
+
+    response = test_client.get(f"/qr_code/{qr_code['id']}/stats", headers=auth_headers)
+    assert response.status_code == 200, response.json()
+    stats = response.json()
+    assert len(stats['days']) == 30
+    assert stats['days'][-1]['count'] == 3
+    assert sum(day['count'] for day in stats['days']) == 3
+    assert stats['total'] == 3
+    assert stats['last_scan_at'] is not None
+
+
+def test_stats_requires_auth(test_client, qr_code):
+    response = test_client.get(f"/qr_code/{qr_code['id']}/stats")
+    assert response.status_code == 401
+
+
+def test_stats_of_foreign_code_404(test_client, qr_code):
+    response = test_client.post('/user/register', json={'username': 'other', 'password': 'pw'})
+    other_headers = {'Authorization': f"Bearer {response.json()['access_token']}"}
+    response = test_client.get(f"/qr_code/{qr_code['id']}/stats", headers=other_headers)
+    assert response.status_code == 404
+
+
+def test_health(test_client):
+    response = test_client.get('/health')
+    assert response.status_code == 200
+    assert response.json() == {'status': 'ok'}
+
+
 def test_redirect_unknown_code_404(test_client):
     response = test_client.get('/qr_code/00000000-0000-0000-0000-000000000000', follow_redirects=False)
     assert response.status_code == 404, response.text
