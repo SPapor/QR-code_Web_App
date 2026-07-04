@@ -15,4 +15,6 @@ def upgrade_database() -> None:
     """
     cfg = Config(str(APP_ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(APP_ROOT / "migrations"))
+    # don't let alembic's fileConfig clobber the app's logging setup
+    cfg.attributes["configure_logger"] = False
     command.upgrade(cfg, "head")
