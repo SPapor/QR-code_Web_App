@@ -13,6 +13,25 @@ export interface QrCode {
 let items: QrCode[] = [];
 let currentEditId: string | null = null;
 
+type ViewMode = 'grid' | 'list';
+const VIEW_KEY = 'view-mode';
+
+function viewMode(): ViewMode {
+  return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'grid';
+}
+
+function setViewMode(mode: ViewMode): void {
+  localStorage.setItem(VIEW_KEY, mode);
+  syncViewToggle();
+  renderList();
+}
+
+function syncViewToggle(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-viewmode]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.viewmode === viewMode());
+  });
+}
+
 /* ── API ─────────────────────────────────────────────────────── */
 
 export async function fetchAll(): Promise<QrCode[]> {
@@ -107,6 +126,15 @@ function displayLink(link: string): string {
 }
 
 function skeletonHtml(): string {
+  if (viewMode() === 'grid') {
+    return Array.from({ length: 3 }, (_, i) => `
+      <div class="card skeleton" style="--i:${i}">
+        <span class="sk sk-card"></span>
+        <div class="card-body">
+          <span class="sk" style="width:${55 + i * 10}%"></span>
+        </div>
+      </div>`).join('');
+  }
   return Array.from({ length: 3 }, (_, i) => `
     <div class="row skeleton" style="--i:${i}">
       <div class="n">··</div>
@@ -148,6 +176,28 @@ function rowHtml(q: QrCode, i: number): string {
     </div>`;
 }
 
+function cardHtml(q: QrCode, i: number): string {
+  const scans = q.scan_count ?? 0;
+  return `
+    <div class="card" data-id="${escapeAttr(String(q.id))}" style="--i:${i}">
+      <button class="card-thumb" type="button" data-open title="Открыть QR">
+        <img src="${qrImageUrl(q.id)}" alt="" loading="lazy">
+      </button>
+      <div class="card-body">
+        <div class="name">${escapeHTML(q.name)}</div>
+        <a class="link" href="${escapeAttr(q.link)}" target="_blank" rel="noopener">${escapeHTML(displayLink(q.link))}</a>
+      </div>
+      <div class="card-foot">
+        <span class="scans-chip" title="${escapeAttr(scansSummary(q))}">${scans}&thinsp;скан.</span>
+        <div class="actions">
+          <button class="btn-icon" type="button" data-copy title="Скопировать ссылку QR" aria-label="Скопировать ссылку QR">${ICON_COPY}</button>
+          <button class="btn-icon" type="button" data-edit title="Редактировать" aria-label="Редактировать">${ICON_EDIT}</button>
+          <button class="btn-icon danger" type="button" data-delete title="Удалить" aria-label="Удалить">${ICON_TRASH}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
 function searchQuery(): string {
   const input = document.getElementById('search') as HTMLInputElement | null;
   return input?.value.trim().toLowerCase() ?? '';
@@ -158,8 +208,11 @@ function renderList(): void {
   const toolbar = document.getElementById('toolbar');
   if (!list) return;
 
+  const grid = viewMode() === 'grid';
+  list.classList.toggle('grid', grid);
   if (toolbar) toolbar.hidden = items.length < 2;
   if (items.length === 0) {
+    list.classList.remove('grid');
     list.innerHTML = emptyHtml();
     return;
   }
@@ -167,15 +220,19 @@ function renderList(): void {
   const visible = q
     ? items.filter(x => x.name.toLowerCase().includes(q) || x.link.toLowerCase().includes(q))
     : items;
-  list.innerHTML = visible.length === 0
-    ? `<div class="list-state">Ничего не нашлось по «${escapeHTML(q)}»</div>`
-    : visible.map(rowHtml).join('');
+  if (visible.length === 0) {
+    list.classList.remove('grid');
+    list.innerHTML = `<div class="list-state">Ничего не нашлось по «${escapeHTML(q)}»</div>`;
+    return;
+  }
+  list.innerHTML = visible.map(grid ? cardHtml : rowHtml).join('');
 }
 
 export async function loadList(): Promise<void> {
   const list = document.getElementById('list');
   if (!list) return;
 
+  list.classList.toggle('grid', viewMode() === 'grid');
   list.innerHTML = skeletonHtml();
   updateCount(null);
   try {
@@ -183,6 +240,7 @@ export async function loadList(): Promise<void> {
     updateCount(items.length);
     renderList();
   } catch (err: unknown) {
+    list.classList.remove('grid');
     list.innerHTML = `<div class="list-state">Ошибка: ${escapeHTML(apiErr(err))}</div>`;
   }
 }
@@ -306,8 +364,9 @@ export function initQrModule(): void {
     const t = e.target as HTMLElement;
 
     if (t.closest('[data-new]')) { openEditView(null); return; }
+    if (t.closest('a')) return; // plain links keep their default behaviour
 
-    const row = t.closest<HTMLElement>('.row');
+    const row = t.closest<HTMLElement>('[data-id]');
     if (!row?.dataset.id) return;
     const q = items.find(x => String(x.id) === row.dataset.id);
     if (!q) return;
@@ -339,6 +398,11 @@ export function initQrModule(): void {
 
   document.getElementById('search')
     ?.addEventListener('input', renderList);
+
+  document.querySelectorAll<HTMLButtonElement>('[data-viewmode]').forEach(btn => {
+    btn.addEventListener('click', () => setViewMode(btn.dataset.viewmode as ViewMode));
+  });
+  syncViewToggle();
 
   document.getElementById('qr-modal')?.addEventListener('click', e => {
     if ((e.target as HTMLElement).closest('[data-close]')) closeModal();

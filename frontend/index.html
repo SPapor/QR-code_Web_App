@@ -139,6 +139,14 @@
     </div>
     <div id="toolbar" class="toolbar" hidden>
       <input id="search" type="search" placeholder="Поиск по названию или ссылке…" autocomplete="off" aria-label="Поиск по кодам">
+      <div class="view-toggle" role="group" aria-label="Вид списка">
+        <button type="button" data-viewmode="grid" title="Сетка" aria-label="Сетка">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <button type="button" data-viewmode="list" title="Список" aria-label="Список">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+        </button>
+      </div>
     </div>
     <div id="list" class="list"></div>
   </div>
