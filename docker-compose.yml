@@ -50,6 +50,8 @@ services:
   db_backup:
     build:
       context: ./app
+    # BOT_TOKEN + BACKUP_TELEGRAM_CHAT_ID in .env enable the offsite copy to Telegram
+    env_file: .env
     command: ["python", "backup_db.py", "--db", "/data/database.sqlite", "--dir", "/backups", "--interval", "86400", "--keep", "14"]
     volumes:
       - db_data:/data:ro
