@@ -34,6 +34,11 @@ class QrCodeService:
     async def get_by_id(self, id: UUID) -> QrCode:
         return await self.qr_code_repo.get_by_id(id)
 
+    async def register_scan(self, id: UUID) -> QrCode:
+        qr_code = await self.qr_code_repo.get_by_id(id)
+        await self.qr_code_repo.increment_scan_count(id)
+        return qr_code
+
     async def update_qr_code(self, user_id: UUID, qr_code_id: UUID, name: str, link: str) -> QrCode:
         qr_code = await self.qr_code_repo.get_by_id(qr_code_id)
         if qr_code.user_id != user_id:

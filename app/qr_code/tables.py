@@ -1,4 +1,4 @@
-from sqlalchemy import UUID, Column, ForeignKey, String, Table
+from sqlalchemy import UUID, BigInteger, Column, ForeignKey, String, Table
 
 from core.database import metadata
 
@@ -9,4 +9,5 @@ qr_code_table = Table(
     Column('user_id', UUID(as_uuid=True), ForeignKey("user.id"), nullable=False, index=True),
     Column("name", String, nullable=False),
     Column("link", String, nullable=False),
+    Column("scan_count", BigInteger, nullable=False, server_default="0"),
 )

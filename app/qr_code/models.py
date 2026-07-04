@@ -15,6 +15,7 @@ class QrCode(Model):
     user_id: UUID
     name: str
     link: str
+    scan_count: int = 0
 
     def get_image(self) -> Image.Image:
         qr = qrcode.main.QRCode(
