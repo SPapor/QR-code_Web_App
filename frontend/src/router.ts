@@ -1,6 +1,6 @@
 import { login as apiLogin, register as apiRegister, logout as apiLogout, isLoggedIn, getUsername, refreshToken } from './auth';
 import { initOAuthButtons, openTelegramBot, syncTelegramButton } from './oauth';
-import { loadList } from './qr';
+import { loadList, syncEditView } from './qr';
 import { flash, apiErr } from './ui';
 
 const VIEWS = [...document.querySelectorAll<HTMLElement>('[data-view]')];
@@ -39,7 +39,7 @@ function routeLogin(): void {
 }
 function routeRegister(): void { showView('view-reg');  }
 function routeDash():     void { if (guard()) { showView('view-dash'); loadList(); } }
-function routeEdit():     void { if (guard()) showView('view-edit'); }
+function routeEdit():     void { if (guard()) { showView('view-edit'); void syncEditView(); } }
 
 const ROUTES: Record<string, () => void> = {
   ''       : routeLogin,

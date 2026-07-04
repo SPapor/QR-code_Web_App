@@ -417,6 +417,16 @@ button { font: inherit; cursor: pointer; }
 }
 .stat-line strong { color: var(--ink); font-weight: 600; }
 
+/* ─── Toolbar (search) ─────────────────────────────────────────── */
+.toolbar { padding: 0 0 18px; }
+#search {
+  max-width: 340px;
+  padding: 10px 16px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+}
+#search::-webkit-search-cancel-button { -webkit-appearance: none; }
+
 /* ─── Editorial list ───────────────────────────────────────────── */
 .list {
   display: flex;
@@ -441,7 +451,7 @@ button { font: inherit; cursor: pointer; }
 }
 @media (min-width: 720px) {
   .row {
-    grid-template-columns: 56px 48px 1.2fr 1.4fr auto;
+    grid-template-columns: 56px 48px 1.2fr 1.2fr auto auto;
     gap: 24px;
     padding: 20px 12px;
   }
@@ -502,6 +512,17 @@ button { font: inherit; cursor: pointer; }
 }
 .row .link a:hover { color: var(--ink); border-color: var(--ink-mute); }
 
+.row .scans {
+  display: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  white-space: nowrap;
+  justify-self: end;
+}
+@media (min-width: 720px) { .row .scans { display: block; } }
+
 .row .actions {
   display: flex;
   gap: 4px;
@@ -535,6 +556,8 @@ button { font: inherit; cursor: pointer; }
     align-self: center;
     gap: 2px;
   }
+  /* copy lives in the modal on small screens — keep the row compact */
+  .row [data-copy] { display: none; }
   .btn-icon { width: 32px; height: 32px; }
 }
 
@@ -720,9 +743,19 @@ button { font: inherit; cursor: pointer; }
   text-decoration: none;
   border-bottom: 1px dashed var(--rule);
   padding-bottom: 1px;
-  margin-bottom: 22px;
 }
 .modal-link:hover { color: var(--ink); border-color: var(--ink-mute); }
+
+.modal-scans {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 10px 0 22px;
+}
+
+.modal-card .btn-oauth { margin-top: 10px; }
 
 body.modal-open { overflow: hidden; }
 

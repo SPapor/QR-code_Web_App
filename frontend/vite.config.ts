@@ -1,12 +1,14 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const apiTarget = process.env.VITE_API_TARGET ?? 'http://localhost:8000';
+
 export default defineConfig({
   server: {
     proxy: {
-      '/auth'    : 'http://localhost:8000',
-      '/user'    : 'http://localhost:8000',
-      '/qr_code' : 'http://localhost:8000',
+      '/auth'    : apiTarget,
+      '/user'    : apiTarget,
+      '/qr_code' : apiTarget,
     },
   },
   plugins: [
