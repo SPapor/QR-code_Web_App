@@ -12,6 +12,7 @@ import auth.api_errors
 import auth.errors
 import core.api_errors
 import core.errors
+import google_auth.api_errors
 import qr_code.api_errors
 import telegram_auth.api_errors
 import user.api_errors
@@ -21,9 +22,12 @@ from core.database import ConnectionProvider
 from core.migrations import upgrade_database
 from core.providers import DataclassSerializerProvider
 from core.settings import settings
+from google_auth.providers import GoogleAuthProvider
+from google_auth.router import router as google_auth_router
 from qr_code.providers import QrCodeProvider
 from qr_code.router import router as qr_code_router
 from telegram_auth.providers import TelegramAuthProvider
+from telegram_auth.router import public_router as telegram_auth_public_router
 from telegram_auth.router import router as telegram_auth_router
 from user.models import User
 from user.providers import UserProvider
@@ -64,11 +68,14 @@ def create_app():
     app.include_router(auth_router, prefix="/auth")
     app.include_router(user_router, prefix="/user")
     app.include_router(telegram_auth_router, prefix="/auth/telegram")
+    app.include_router(telegram_auth_public_router, prefix="/auth/telegram")
+    app.include_router(google_auth_router, prefix="/auth/google")
 
     auth.api_errors.register_exception_handlers(app)
     user.api_errors.register_exception_handlers(app)
     qr_code.api_errors.register_exception_handlers(app)
     telegram_auth.api_errors.register_exception_handlers(app)
+    google_auth.api_errors.register_exception_handlers(app)
     core.api_errors.register_exception_handlers(app)
     return app
 
@@ -80,6 +87,7 @@ container = make_async_container(
     AuthProvider(),
     QrCodeProvider(),
     TelegramAuthProvider(),
+    GoogleAuthProvider(),
 )
 app = create_app()
 setup_dishka(container=container, app=app)

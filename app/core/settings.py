@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     ADMIN_PASSWORD: str | None = None
 
     BOT_SHARED_SECRET: str | None = None
+    BOT_TOKEN: str | None = None
+    BOT_USERNAME: str | None = None
+
+    GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_CLIENT_SECRET: str | None = None
 
 
 settings = Settings()  # noqa

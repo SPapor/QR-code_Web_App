@@ -220,6 +220,50 @@ body:not([data-route="view-dash"]):not([data-route="view-edit"]) .top .user {
 }
 .auth-alt a:hover { border-color: var(--ink); }
 
+/* External sign-in (Telegram widget / Google) */
+.oauth-sep {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0 16px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.oauth-sep::before,
+.oauth-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tg-slot { display: flex; justify-content: center; }
+.tg-slot:empty { display: none; }
+
+.btn-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  font-size: 14px;
+  text-decoration: none;
+  transition: border-color .2s ease;
+}
+.btn-oauth:hover { border-color: var(--ink); }
+
 /* ─── Forms ────────────────────────────────────────────────────── */
 form {
   display: flex;

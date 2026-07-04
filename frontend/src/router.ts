@@ -1,4 +1,5 @@
-import { login as apiLogin, register as apiRegister, logout as apiLogout, isLoggedIn, getUsername } from './auth';
+import { login as apiLogin, register as apiRegister, logout as apiLogout, isLoggedIn, getUsername, refreshToken } from './auth';
+import { initOAuthButtons, openTelegramBot, syncTelegramButton } from './oauth';
 import { loadList } from './qr';
 import { flash, apiErr } from './ui';
 
@@ -24,6 +25,7 @@ function guard(): boolean {
 
 function routeLogin(): void {
   showView('view-login');
+  void initOAuthButtons();
   const f = document.getElementById('loginForm') as HTMLFormElement | null;
   if (f) {
     f.reset();
@@ -53,13 +55,33 @@ function handleRoute(): void {
   (ROUTES[h] ?? routeLogin)();
 }
 
+/** Finish a login started via an external provider (Telegram widget / Google). */
+async function handleOAuthReturn(): Promise<void> {
+  const params = new URLSearchParams(location.search);
+  const oauth = params.get('oauth');
+  if (!oauth) return;
+  history.replaceState(null, '', location.pathname + location.hash);
+  if (oauth === 'ok') {
+    try {
+      await refreshToken();
+      location.hash = '#dash';
+    } catch {
+      flash('Не удалось завершить вход', 'error');
+    }
+  } else {
+    flash('Вход через внешний сервис не удался', 'error');
+  }
+}
+
 window.addEventListener('hashchange', handleRoute);
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+  await handleOAuthReturn();
   if (isLoggedIn() && (!location.hash || location.hash === '#login')) {
     location.hash = '#dash';
   }
   syncUser();
   handleRoute();
+  void syncTelegramButton();
 });
 
 window.addEventListener('auth', (ev: Event) => {
@@ -89,3 +111,6 @@ async function submitAuth(e: Event, action: (u: string, p: string) => Promise<un
 
 document.getElementById('btn-logout')
   ?.addEventListener('click', () => apiLogout());
+
+document.getElementById('btn-telegram')
+  ?.addEventListener('click', () => void openTelegramBot());

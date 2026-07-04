@@ -1,27 +1,62 @@
+import hashlib
+import hmac
 import secrets
+import time
+from uuid import UUID
 
 from auth.dal import AuthRepo
 from auth.errors import InvalidLoginOrPasswordError
 from auth.models import Auth
 from auth.services import AuthService
+from core.settings import settings
 from qr_code.dal import QrCodeRepo
-from telegram_auth.dal import TelegramLinkRepo
-from telegram_auth.errors import TargetAccountAlreadyLinkedError
-from telegram_auth.models import TelegramLink
+from telegram_auth.dal import TelegramLinkCodeRepo, TelegramLinkRepo
+from telegram_auth.errors import (
+    BotIntegrationDisabledError,
+    InvalidLinkCodeError,
+    InvalidTelegramWidgetDataError,
+    TargetAccountAlreadyLinkedError,
+)
+from telegram_auth.models import TelegramLink, TelegramLinkCode
 from user.dal import UserRepo
 from user.models import User
+
+WIDGET_AUTH_MAX_AGE_SECONDS = 600
+LINK_CODE_TTL_SECONDS = 600
+
+
+def verify_widget_data(data: dict[str, str], bot_token: str) -> int:
+    received_hash = data.get("hash")
+    if not received_hash:
+        raise InvalidTelegramWidgetDataError
+    fields = {key: value for key, value in data.items() if key != "hash"}
+    check_string = "\n".join(f"{key}={fields[key]}" for key in sorted(fields))
+    secret_key = hashlib.sha256(bot_token.encode()).digest()
+    expected_hash = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected_hash, received_hash):
+        raise InvalidTelegramWidgetDataError
+    try:
+        telegram_id = int(data["id"])
+        auth_date = int(data["auth_date"])
+    except (KeyError, ValueError):
+        raise InvalidTelegramWidgetDataError
+    if time.time() - auth_date > WIDGET_AUTH_MAX_AGE_SECONDS:
+        raise InvalidTelegramWidgetDataError
+    return telegram_id
 
 
 class TelegramAuthService:
     def __init__(
         self,
         link_repo: TelegramLinkRepo,
+        link_code_repo: TelegramLinkCodeRepo,
         auth_service: AuthService,
         auth_repo: AuthRepo,
         user_repo: UserRepo,
         qr_code_repo: QrCodeRepo,
     ):
         self._link_repo = link_repo
+        self._link_code_repo = link_code_repo
         self._auth_service = auth_service
         self._auth_repo = auth_repo
         self._user_repo = user_repo
@@ -40,6 +75,12 @@ class TelegramAuthService:
         await self._link_repo.create(TelegramLink(telegram_id=telegram_id, user_id=user.id))
         return self._auth_service.create_access_refresh_token_pair(auth)
 
+    async def login_via_widget(self, data: dict[str, str]) -> tuple[str, str]:
+        if not settings.BOT_TOKEN:
+            raise BotIntegrationDisabledError
+        telegram_id = verify_widget_data(data, settings.BOT_TOKEN)
+        return await self.exchange(telegram_id)
+
     async def link(self, telegram_id: int, username: str, password: str) -> tuple[str, str]:
         try:
             target_auth = await self._auth_repo.get_by_username(username)
@@ -48,6 +89,26 @@ class TelegramAuthService:
         if not self._auth_service.verify_password(password, target_auth.password_hash):
             raise InvalidLoginOrPasswordError
 
+        return await self._link_to_auth(telegram_id, target_auth)
+
+    async def create_link_code(self, user_id: UUID) -> str:
+        code = secrets.token_urlsafe(16)
+        expires_at = int(time.time()) + LINK_CODE_TTL_SECONDS
+        await self._link_code_repo.create(TelegramLinkCode(code=code, user_id=user_id, expires_at=expires_at))
+        return code
+
+    async def link_by_code(self, telegram_id: int, code: str) -> tuple[str, str]:
+        link_code = await self._link_code_repo.get_by_code(code)
+        if link_code is None or link_code.expires_at < time.time():
+            raise InvalidLinkCodeError
+        await self._link_code_repo.delete_by_code(code)
+        try:
+            target_auth = await self._auth_repo.get_by_user_id(link_code.user_id)
+        except Auth.NotFoundError:
+            raise InvalidLinkCodeError
+        return await self._link_to_auth(telegram_id, target_auth)
+
+    async def _link_to_auth(self, telegram_id: int, target_auth: Auth) -> tuple[str, str]:
         existing_link_for_target = await self._link_repo.get_by_user_id(target_auth.user_id)
         if existing_link_for_target is not None and existing_link_for_target.telegram_id != telegram_id:
             raise TargetAccountAlreadyLinkedError

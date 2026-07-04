@@ -64,6 +64,14 @@ class BackendClient:
         )
         return self._token_pair_from_response(resp)
 
+    async def tg_link_by_code(self, telegram_id: int, code: str) -> TokenPair:
+        resp = await self._client.post(
+            "/auth/telegram/link_by_code",
+            json={"telegram_id": telegram_id, "code": code},
+            headers=self._bot_secret_headers,
+        )
+        return self._token_pair_from_response(resp)
+
     async def refresh(self, refresh_token: str) -> TokenPair:
         resp = await self._client.post(
             "/auth/refresh",

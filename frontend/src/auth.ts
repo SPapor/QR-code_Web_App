@@ -34,7 +34,6 @@ export async function login(username: string, password: string): Promise<TokenRe
   if (!r.ok) throw await r.json();
   const data: TokenResponse = await r.json();
   saveTokens(data);
-  localStorage.setItem(USER_KEY, username);
   signal('login');
   return data;
 }
@@ -88,10 +87,21 @@ export async function authFetch(url: string, opts: RequestInit = {}): Promise<Re
 
 function saveTokens({ access_token, expires_in }: TokenResponse): void {
   localStorage.setItem(ACCESS_KEY, access_token);
+  const username = usernameFromToken(access_token);
+  if (username) localStorage.setItem(USER_KEY, username);
   if (expires_in) {
     localStorage.setItem(EXP_KEY, String(Date.now() + expires_in * 1000));
   } else {
     localStorage.removeItem(EXP_KEY);
+  }
+}
+
+function usernameFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.username === 'string' ? payload.username : null;
+  } catch {
+    return null;
   }
 }
 

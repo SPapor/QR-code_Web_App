@@ -8,7 +8,9 @@ from starlette.testclient import TestClient
 from auth.providers import AuthProvider
 from core.database import ConnectionProvider, create_tables
 from core.providers import DataclassSerializerProvider
+from google_auth.providers import GoogleAuthProvider
 from qr_code.providers import QrCodeProvider
+from telegram_auth.providers import TelegramAuthProvider
 from user.providers import UserProvider
 
 
@@ -28,6 +30,8 @@ async def container():
         UserProvider(),
         AuthProvider(),
         QrCodeProvider(),
+        TelegramAuthProvider(),
+        GoogleAuthProvider(),
     )
     yield container
     await container.close()

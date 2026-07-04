@@ -8,3 +8,10 @@ from core.models import Model
 class TelegramLink(Model):
     telegram_id: int
     user_id: UUID
+
+
+@dataclass(kw_only=True)
+class TelegramLinkCode(Model):
+    code: str
+    user_id: UUID
+    expires_at: int

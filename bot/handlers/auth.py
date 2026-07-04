@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from aiogram import F, Router
-from aiogram.filters import Command, CommandStart, StateFilter
+from aiogram.filters import Command, CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
@@ -27,6 +27,27 @@ HELP_TEXT = (
     "/new — create a new QR code\n"
     "/cancel — abort the current operation"
 )
+
+
+# must be registered before the plain /start handler, which matches any payload
+@router.message(CommandStart(deep_link=True, magic=F.args.startswith("link_")))
+async def cmd_start_link(
+    message: Message, command: CommandObject, auth: AuthSession, client: BackendClient
+) -> None:
+    if message.from_user is None:
+        await message.answer("Cannot identify Telegram user.")
+        return
+    code = (command.args or "")[len("link_"):]
+    try:
+        pair = await client.tg_link_by_code(message.from_user.id, code)
+    except BackendError as exc:
+        await message.answer(f"Link failed: {exc.detail or exc.status_code}")
+        return
+    await auth.store_tokens(pair)
+    await message.answer(
+        "Linked! This chat is now bound to your website account.\n"
+        "Use /list to see your QR codes or /new to create one."
+    )
 
 
 @router.message(CommandStart())

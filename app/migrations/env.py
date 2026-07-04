@@ -7,6 +7,7 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import auth.tables  # noqa: F401  (populate metadata)
+import google_auth.tables  # noqa: F401
 import qr_code.tables  # noqa: F401
 import telegram_auth.tables  # noqa: F401
 import user.tables  # noqa: F401

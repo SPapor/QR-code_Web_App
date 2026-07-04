@@ -5,6 +5,8 @@ from core.api_errors import ApiError, static_exception_handler
 from telegram_auth.errors import (
     BotIntegrationDisabledError,
     InvalidBotSecretError,
+    InvalidLinkCodeError,
+    InvalidTelegramWidgetDataError,
     TargetAccountAlreadyLinkedError,
 )
 
@@ -17,9 +19,13 @@ class ApiErrors:
         "Target account is already linked to another Telegram user",
         "telegram_auth.0003",
     )
+    INVALID_WIDGET_DATA = ApiError(status.HTTP_401_UNAUTHORIZED, "Invalid Telegram widget data", "telegram_auth.0004")
+    INVALID_LINK_CODE = ApiError(status.HTTP_400_BAD_REQUEST, "Invalid or expired link code", "telegram_auth.0005")
 
 
 def register_exception_handlers(app: FastAPI):
     static_exception_handler(app, InvalidBotSecretError, ApiErrors.INVALID_BOT_SECRET)
     static_exception_handler(app, BotIntegrationDisabledError, ApiErrors.BOT_INTEGRATION_DISABLED)
     static_exception_handler(app, TargetAccountAlreadyLinkedError, ApiErrors.TARGET_ACCOUNT_ALREADY_LINKED)
+    static_exception_handler(app, InvalidTelegramWidgetDataError, ApiErrors.INVALID_WIDGET_DATA)
+    static_exception_handler(app, InvalidLinkCodeError, ApiErrors.INVALID_LINK_CODE)

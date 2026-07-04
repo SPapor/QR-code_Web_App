@@ -15,3 +15,11 @@ class BotIntegrationDisabledError(TelegramAuthError):
 
 class TargetAccountAlreadyLinkedError(TelegramAuthError):
     pass
+
+
+class InvalidTelegramWidgetDataError(TelegramAuthError):
+    pass
+
+
+class InvalidLinkCodeError(TelegramAuthError):
+    pass

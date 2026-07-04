@@ -6,8 +6,8 @@ from core.crud_base import CrudBase
 from core.repo_base import RepoBase
 from core.serializer import Serializer
 from core.types import DTO
-from telegram_auth.models import TelegramLink
-from telegram_auth.tables import telegram_link_table
+from telegram_auth.models import TelegramLink, TelegramLinkCode
+from telegram_auth.tables import telegram_link_code_table, telegram_link_table
 
 
 class TelegramLinkCrud(CrudBase[int, DTO]):
@@ -53,3 +53,30 @@ class TelegramLinkRepo(RepoBase[int, TelegramLink]):
 
     async def delete_by_telegram_id(self, telegram_id: int) -> None:
         await self.crud.delete_by_telegram_id(telegram_id)
+
+
+class TelegramLinkCodeCrud(CrudBase[str, DTO]):
+    table = telegram_link_code_table
+
+    async def get_by_code(self, code: str) -> DTO | None:
+        res = await self.session.execute(select(self.table).where(self.table.c.code == code))
+        return res.mappings().one_or_none()
+
+    async def delete_by_code(self, code: str) -> None:
+        await self.session.execute(delete(self.table).where(self.table.c.code == code))
+
+
+class TelegramLinkCodeRepo(RepoBase[str, TelegramLinkCode]):
+    crud: TelegramLinkCodeCrud
+
+    def __init__(self, crud: TelegramLinkCodeCrud, serializer: Serializer[TelegramLinkCode, DTO]):
+        super().__init__(crud, serializer, TelegramLinkCode)
+
+    async def get_by_code(self, code: str) -> TelegramLinkCode | None:
+        dto = await self.crud.get_by_code(code)
+        if dto is None:
+            return None
+        return self.serializer.deserialize(dto)
+
+    async def delete_by_code(self, code: str) -> None:
+        await self.crud.delete_by_code(code)
