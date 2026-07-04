@@ -17,6 +17,9 @@
   --ink-mute: var(--n-60);
   --rule: rgba(26, 24, 20, 0.12);
   --hover: rgba(217, 119, 87, 0.07);
+  /* chart marks: validated against --paper (dataviz lightness/contrast checks) */
+  --chart-bar: #B24A2F;
+  --chart-bar-hover: #8F3A24;
 
   --danger: #C0392B;
   --danger-bg: rgba(192, 57, 43, 0.08);
@@ -47,6 +50,8 @@
     --ink-mute: #A5988A;
     --rule: rgba(242, 233, 222, 0.12);
     --hover: rgba(232, 144, 108, 0.08);
+    --chart-bar: #CE6845;
+    --chart-bar-hover: #E8906C;
     --danger: #FF6B5C;
     --danger-bg: rgba(255, 107, 92, 0.10);
     --shadow-sm: 0 1px 2px rgba(0,0,0,.3), 0 4px 12px -6px rgba(0,0,0,.5);
@@ -902,6 +907,21 @@ button { font: inherit; cursor: pointer; }
   margin: 10px 0 22px;
 }
 
+.modal-chart { margin: -8px 0 20px; }
+.modal-chart svg { display: block; width: 100%; height: auto; }
+.modal-chart .bar { fill: var(--chart-bar); }
+.modal-chart g:hover .bar { fill: var(--chart-bar-hover); }
+.modal-chart .stub { fill: var(--rule); }
+.modal-chart .hit { fill: transparent; }
+.modal-chart .axis { stroke: var(--rule); stroke-width: 1; }
+.modal-chart .peak,
+.modal-chart .tick {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  fill: var(--ink-mute);
+}
+
 .modal-actions {
   display: flex;
   justify-content: center;
@@ -963,6 +983,7 @@ body.modal-open { overflow: hidden; }
   .modal-backdrop,
   .modal-close,
   #modal-download,
+  #modal-chart,
   .modal-actions { display: none !important; }
   .modal-card {
     background: #fff;

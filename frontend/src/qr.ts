@@ -249,6 +249,63 @@ export async function loadList(): Promise<void> {
 
 let modalQr: QrCode | null = null;
 
+interface ScanStats {
+  days: { date: string; count: number }[];
+}
+
+function shortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+}
+
+/** Inline bar chart: scans per day. One series, so no legend; peak gets the only direct label. */
+function chartHtml(days: ScanStats['days']): string {
+  const W = 300, H = 56, BASE = 46, TOP = 12;
+  const slot = W / days.length;
+  const barW = Math.max(2, slot - 2);
+  const max = Math.max(...days.map(d => d.count));
+  const peakIdx = days.findIndex(d => d.count === max);
+
+  const bars = days.map((d, i) => {
+    const x = i * slot + (slot - barW) / 2;
+    const h = d.count === 0 ? 0 : Math.max(3, (d.count / max) * (BASE - TOP));
+    const bar = d.count === 0
+      ? `<rect class="stub" x="${x}" y="${BASE - 1.5}" width="${barW}" height="1.5"/>`
+      : `<rect class="bar" x="${x}" y="${BASE - h}" width="${barW}" height="${h}" rx="1.5"/>`;
+    const label = i === peakIdx && max > 0
+      ? `<text class="peak" x="${x + barW / 2}" y="${BASE - h - 3}" text-anchor="middle">${d.count}</text>`
+      : '';
+    // full-height hit area so the tooltip works on short bars too
+    return `<g><title>${shortDate(d.date)} · ${d.count}</title>
+      <rect class="hit" x="${i * slot}" y="0" width="${slot}" height="${BASE}"/>${bar}${label}</g>`;
+  }).join('');
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Сканирования по дням за последние ${days.length} дней">
+      <line class="axis" x1="0" y1="${BASE}" x2="${W}" y2="${BASE}"/>
+      ${bars}
+      <text class="tick" x="0" y="${H}">${shortDate(days[0].date)}</text>
+      <text class="tick" x="${W}" y="${H}" text-anchor="end">${shortDate(days[days.length - 1].date)}</text>
+    </svg>`;
+}
+
+async function loadModalChart(q: QrCode): Promise<void> {
+  const box = document.getElementById('modal-chart');
+  if (!box) return;
+  box.hidden = true;
+  box.innerHTML = '';
+  try {
+    const r = await authFetch(`${API_BASE}/qr_code/${q.id}/stats?days=30`);
+    if (!r.ok) return;
+    const stats: ScanStats = await r.json();
+    if (modalQr?.id !== q.id) return; // modal changed while loading
+    if (!stats.days.some(d => d.count > 0)) return; // nothing to plot yet
+    box.innerHTML = chartHtml(stats.days);
+    box.hidden = false;
+  } catch {
+    /* the chart is optional decoration — fail silently */
+  }
+}
+
 function openModal(q: QrCode): void {
   const modal = document.getElementById('qr-modal');
   if (!modal) return;
@@ -277,6 +334,7 @@ function openModal(q: QrCode): void {
 
   modal.hidden = false;
   document.body.classList.add('modal-open');
+  void loadModalChart(q);
 }
 
 function closeModal(): void {
