@@ -62,6 +62,8 @@ def main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # httpx logs full request URLs at INFO, which would leak the bot token into container logs
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     bot_token = os.environ.get("BOT_TOKEN")
     chat_id = os.environ.get("BACKUP_TELEGRAM_CHAT_ID")
