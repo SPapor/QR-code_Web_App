@@ -5,11 +5,18 @@ import { flash, apiErr } from './ui';
 
 const VIEWS = [...document.querySelectorAll<HTMLElement>('[data-view]')];
 const hideAll  = () => VIEWS.forEach(v => (v.hidden = true));
+const TITLES: Record<string, string> = {
+  'view-login': 'вход',
+  'view-reg'  : 'регистрация',
+  'view-dash' : 'ваши коды',
+  'view-edit' : 'код',
+};
 const showView = (id: string) => {
   hideAll();
   const e = document.getElementById(id);
   if (e) e.hidden = false;
   document.body.dataset.route = id;
+  document.title = TITLES[id] ? `qr/studio — ${TITLES[id]}` : 'qr/studio';
 };
 
 function syncUser(): void {

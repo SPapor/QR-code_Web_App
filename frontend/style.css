@@ -755,7 +755,29 @@ button { font: inherit; cursor: pointer; }
   margin: 10px 0 22px;
 }
 
-.modal-card .btn-oauth { margin-top: 10px; }
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 16px;
+}
+.modal-actions a,
+.modal-actions button {
+  background: none;
+  border: 0;
+  padding: 0 0 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.modal-actions a:hover,
+.modal-actions button:hover { color: var(--ink); border-color: var(--ink); }
 
 body.modal-open { overflow: hidden; }
 
@@ -783,6 +805,36 @@ body.modal-open { overflow: hidden; }
 @media (prefers-color-scheme: dark) {
   .flash { background: var(--paper); color: var(--ink); border: 1px solid var(--rule); }
   .flash.error { background: var(--danger); color: var(--n-100); border: 0; }
+}
+
+/* ─── Print: only the open QR card, as a table tent ────────────── */
+@media print {
+  body.modal-open > *:not(#qr-modal) { display: none !important; }
+  body.modal-open { overflow: visible; background: #fff; }
+  body::before { display: none; }
+  .modal { position: static; display: block; padding: 0; }
+  .modal-backdrop,
+  .modal-close,
+  #modal-download,
+  .modal-actions { display: none !important; }
+  .modal-card {
+    background: #fff;
+    color: #000;
+    border: 0;
+    box-shadow: none;
+    max-width: none;
+    margin: 20mm auto 0;
+    animation: none;
+  }
+  #modal-img {
+    width: 110mm;
+    height: 110mm;
+    box-shadow: none;
+    padding: 0;
+  }
+  .modal-name { color: #000; font-size: 28px; margin-top: 8mm; }
+  .modal-link { color: #333; border: 0; }
+  .modal-scans { display: none; }
 }
 
 /* ─── Motion preferences ───────────────────────────────────────── */

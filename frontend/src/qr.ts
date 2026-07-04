@@ -7,6 +7,7 @@ export interface QrCode {
   name: string;
   link: string;
   scan_count: number;
+  last_scan_at: number | null;
 }
 
 let items: QrCode[] = [];
@@ -79,6 +80,21 @@ function pluralScans(n: number): string {
   return 'сканирований';
 }
 
+function relTime(ts: number): string {
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 60) return 'только что';
+  if (diff < 3600) return `${Math.floor(diff / 60)} мин назад`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} ч назад`;
+  return new Date(ts * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function scansSummary(q: QrCode): string {
+  const scans = q.scan_count ?? 0;
+  let text = `${scans} ${pluralScans(scans)}`;
+  if (scans > 0 && q.last_scan_at) text += ` · ${relTime(q.last_scan_at)}`;
+  return text;
+}
+
 function updateCount(n: number | null): void {
   const num  = document.getElementById('qr-count');
   const word = document.getElementById('qr-count-word');
@@ -122,7 +138,7 @@ function rowHtml(q: QrCode, i: number): string {
       </button>
       <div class="name">${escapeHTML(q.name)}</div>
       <div class="link"><a href="${escapeAttr(q.link)}" target="_blank" rel="noopener">${escapeHTML(displayLink(q.link))}</a></div>
-      <div class="scans" title="${scans} ${pluralScans(scans)}">${scans}&thinsp;скан.</div>
+      <div class="scans" title="${escapeAttr(scansSummary(q))}">${scans}&thinsp;скан.</div>
       <div class="actions">
         <button class="btn-icon" type="button" data-copy title="Скопировать ссылку QR" aria-label="Скопировать ссылку QR">${ICON_COPY}</button>
         <button class="btn-icon" type="button" data-open title="Открыть QR" aria-label="Открыть QR">${ICON_OPEN}</button>
@@ -186,13 +202,20 @@ function openModal(q: QrCode): void {
   link.href = q.link;
   link.textContent = displayLink(q.link);
 
-  const scans = q.scan_count ?? 0;
   const scansBox = document.getElementById('modal-scans');
-  if (scansBox) scansBox.textContent = `${scans} ${pluralScans(scans)}`;
+  if (scansBox) scansBox.textContent = scansSummary(q);
 
+  const fileBase = q.name.replace(/[^\wа-яё \-]+/gi, '').trim() || 'qr';
   const dl = document.getElementById('modal-download') as HTMLAnchorElement;
-  dl.href = qrImageUrl(q.id);
-  dl.download = (q.name.replace(/[^\wа-яё \-]+/gi, '').trim() || 'qr') + '.png';
+  // hi-res png (~1200px) so the code survives print
+  dl.href = `${qrImageUrl(q.id)}?scale=20`;
+  dl.download = `${fileBase}.png`;
+
+  const svg = document.getElementById('modal-svg') as HTMLAnchorElement | null;
+  if (svg) {
+    svg.href = `${qrImageUrl(q.id)}?fmt=svg`;
+    svg.download = `${fileBase}.svg`;
+  }
 
   modal.hidden = false;
   document.body.classList.add('modal-open');
@@ -324,6 +347,8 @@ export function initQrModule(): void {
   document.getElementById('modal-copy')?.addEventListener('click', () => {
     if (modalQr) void copyText(qrPublicUrl(modalQr.id));
   });
+
+  document.getElementById('modal-print')?.addEventListener('click', () => window.print());
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeModal();
   });
