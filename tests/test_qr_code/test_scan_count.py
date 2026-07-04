@@ -17,6 +17,7 @@ def qr_code(test_client, auth_headers):
 
 def test_new_code_has_zero_scans(qr_code):
     assert qr_code['scan_count'] == 0
+    assert qr_code['last_scan_at'] is None
 
 
 def test_redirect_increments_scan_count(test_client, auth_headers, qr_code):
@@ -29,6 +30,27 @@ def test_redirect_increments_scan_count(test_client, auth_headers, qr_code):
     assert response.status_code == 200, response.json()
     (item,) = response.json()
     assert item['scan_count'] == 2
+    assert item['last_scan_at'] is not None
+
+
+def test_image_png_default_and_scale(test_client, qr_code):
+    small = test_client.get(f"/qr_code/{qr_code['id']}/image")
+    big = test_client.get(f"/qr_code/{qr_code['id']}/image?scale=20")
+    assert small.headers['content-type'] == 'image/png'
+    assert big.headers['content-type'] == 'image/png'
+    assert len(big.content) > len(small.content)
+
+
+def test_image_scale_out_of_range_422(test_client, qr_code):
+    response = test_client.get(f"/qr_code/{qr_code['id']}/image?scale=100")
+    assert response.status_code == 422
+
+
+def test_image_svg(test_client, qr_code):
+    response = test_client.get(f"/qr_code/{qr_code['id']}/image?fmt=svg")
+    assert response.status_code == 200
+    assert response.headers['content-type'] == 'image/svg+xml'
+    assert b'<svg' in response.content
 
 
 def test_redirect_unknown_code_404(test_client):

@@ -1,8 +1,9 @@
 import io
+from typing import Literal
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -16,8 +17,16 @@ router = APIRouter(route_class=DishkaRoute)
 
 
 @router.get("/{qr_code_id}/image")
-async def read_item(qr_code_id: UUID, qr_code_service: FromDishka[QrCodeService]):
-    image = await qr_code_service.get_image_by_qr_code_id(qr_code_id)
+async def read_item(
+    qr_code_id: UUID,
+    qr_code_service: FromDishka[QrCodeService],
+    fmt: Literal["png", "svg"] = "png",
+    scale: int = Query(10, ge=4, le=40),
+):
+    if fmt == "svg":
+        svg = await qr_code_service.get_svg_by_qr_code_id(qr_code_id)
+        return Response(content=svg, media_type="image/svg+xml")
+    image = await qr_code_service.get_image_by_qr_code_id(qr_code_id, box_size=scale)
     image_io = io.BytesIO()
     image.save(image_io, format='PNG')
     image_bytes = image_io.getvalue()

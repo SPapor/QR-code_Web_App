@@ -23,9 +23,11 @@ class QrCodeCrud(CrudBase[UUID, DTO]):
             update(self.table).where(self.table.c.user_id == from_user_id).values(user_id=to_user_id)
         )
 
-    async def increment_scan_count(self, id_: UUID) -> None:
+    async def increment_scan_count(self, id_: UUID, now: int) -> None:
         await self.session.execute(
-            update(self.table).where(self.table.c.id == id_).values(scan_count=self.table.c.scan_count + 1)
+            update(self.table)
+            .where(self.table.c.id == id_)
+            .values(scan_count=self.table.c.scan_count + 1, last_scan_at=now)
         )
 
 
@@ -42,5 +44,5 @@ class QrCodeRepo(RepoBase[UUID, QrCode]):
     async def transfer_owner(self, from_user_id: UUID, to_user_id: UUID) -> None:
         await self.crud.transfer_owner(from_user_id, to_user_id)
 
-    async def increment_scan_count(self, id_: UUID) -> None:
-        await self.crud.increment_scan_count(id_)
+    async def increment_scan_count(self, id_: UUID, now: int) -> None:
+        await self.crud.increment_scan_count(id_, now)

@@ -10,4 +10,5 @@ qr_code_table = Table(
     Column("name", String, nullable=False),
     Column("link", String, nullable=False),
     Column("scan_count", BigInteger, nullable=False, server_default="0"),
+    Column("last_scan_at", BigInteger, nullable=True),
 )
