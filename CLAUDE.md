@@ -15,7 +15,7 @@ docker compose up -d --build
 # backend dev server (from app/, uses app/.venv)
 cd app && .venv/bin/uvicorn main:app --reload
 
-# tests (74 tests, in-memory sqlite; run from repo root)
+# tests (96 tests, in-memory sqlite; run from repo root)
 app/.venv/bin/python -m pytest tests -q
 app/.venv/bin/python -m pytest tests/test_auth/test_auth_api.py -q   # single file
 

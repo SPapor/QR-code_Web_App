@@ -30,7 +30,7 @@ async def login(
     try:
         access_token, refresh_token = await auth_service.login(form_data.username, form_data.password)
     except InvalidLoginOrPasswordError:
-        rate_limiter.record_failure(rate_limit_key)
+        rate_limiter.record(rate_limit_key)
         raise
     rate_limiter.reset(rate_limit_key)
     # commit only on success: a failed login has nothing to persist
@@ -78,9 +78,11 @@ async def auth_config():
 
 
 def client_ip(request: Request) -> str:
-    forwarded_for = request.headers.get("x-forwarded-for")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
+    # X-Real-IP is set by our nginx and cannot be spoofed as long as the backend
+    # port is not published; the client-controlled X-Forwarded-For is not trusted
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip
     return request.client.host if request.client else "unknown"
 
 

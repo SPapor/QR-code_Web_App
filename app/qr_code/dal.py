@@ -1,7 +1,7 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 
 from core.crud_base import CrudBase
 from core.repo_base import RepoBase
@@ -57,6 +57,11 @@ class ScanEventCrud(CrudBase[UUID, DTO]):
         )
         return [row[0] for row in res.all()]
 
+    async def delete_older_than(self, qr_code_id: UUID, cutoff_ts: int) -> None:
+        await self.session.execute(
+            delete(self.table).where(self.table.c.qr_code_id == qr_code_id, self.table.c.ts < cutoff_ts)
+        )
+
 
 class ScanEventRepo(RepoBase[UUID, ScanEvent]):
     crud: ScanEventCrud
@@ -66,3 +71,6 @@ class ScanEventRepo(RepoBase[UUID, ScanEvent]):
 
     async def get_ts_since(self, qr_code_id: UUID, since: int) -> Sequence[int]:
         return await self.crud.get_ts_since(qr_code_id, since)
+
+    async def delete_older_than(self, qr_code_id: UUID, cutoff_ts: int) -> None:
+        await self.crud.delete_older_than(qr_code_id, cutoff_ts)

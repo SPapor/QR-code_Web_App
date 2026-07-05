@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import hmac
 import secrets
@@ -86,7 +87,7 @@ class TelegramAuthService:
             target_auth = await self._auth_repo.get_by_username(username)
         except Auth.NotFoundError:
             raise InvalidLoginOrPasswordError
-        if not self._auth_service.verify_password(password, target_auth.password_hash):
+        if not await asyncio.to_thread(self._auth_service.verify_password, password, target_auth.password_hash):
             raise InvalidLoginOrPasswordError
 
         return await self._link_to_auth(telegram_id, target_auth)

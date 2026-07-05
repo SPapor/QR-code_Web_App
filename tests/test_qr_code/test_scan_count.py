@@ -3,7 +3,7 @@ import pytest
 
 @pytest.fixture
 def auth_headers(test_client):
-    response = test_client.post('/user/register', json={'username': 'qr_owner', 'password': 'pw'})
+    response = test_client.post('/user/register', json={'username': 'qr_owner', 'password': 'pw12345678'})
     assert response.status_code == 200, response.json()
     return {'Authorization': f"Bearer {response.json()['access_token']}"}
 
@@ -82,7 +82,7 @@ def test_stats_requires_auth(test_client, qr_code):
 
 
 def test_stats_of_foreign_code_404(test_client, qr_code):
-    response = test_client.post('/user/register', json={'username': 'other', 'password': 'pw'})
+    response = test_client.post('/user/register', json={'username': 'other', 'password': 'pw12345678'})
     other_headers = {'Authorization': f"Bearer {response.json()['access_token']}"}
     response = test_client.get(f"/qr_code/{qr_code['id']}/stats", headers=other_headers)
     assert response.status_code == 404

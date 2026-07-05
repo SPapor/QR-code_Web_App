@@ -9,6 +9,9 @@ from PIL import Image
 from qr_code.dal import QrCodeRepo, ScanEventRepo
 from qr_code.models import QrCode, ScanEvent
 
+# the stats endpoint serves at most 90 days, older per-scan events are dropped
+SCAN_EVENT_RETENTION_SECONDS = 90 * 24 * 3600
+
 
 class QrCodeService:
     def __init__(self, qr_code_repo: QrCodeRepo, scan_event_repo: ScanEventRepo):
@@ -47,6 +50,8 @@ class QrCodeService:
         now = int(time.time())
         await self.qr_code_repo.increment_scan_count(id, now)
         await self.scan_event_repo.create(ScanEvent(qr_code_id=id, ts=now))
+        # keeps the table bounded even if someone hammers the redirect; scan_count is untouched
+        await self.scan_event_repo.delete_older_than(id, now - SCAN_EVENT_RETENTION_SECONDS)
         return qr_code
 
     async def get_scan_stats(self, user_id: UUID, qr_code_id: UUID, days: int = 30) -> dict:

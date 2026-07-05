@@ -14,7 +14,9 @@ services:
     volumes:
       - db_data:/data
     ports:
-      - "8000:8000"
+      # localhost only: the public entrypoint is the frontend nginx, and the
+      # rate limiter trusts X-Real-IP set there — direct API access would allow spoofing it
+      - "127.0.0.1:8000:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
       interval: 30s
@@ -54,7 +56,9 @@ services:
     env_file: .env
     command: ["python", "backup_db.py", "--db", "/data/database.sqlite", "--dir", "/backups", "--interval", "86400", "--keep", "14"]
     volumes:
-      - db_data:/data:ro
+      # rw, not ro: the db runs in WAL mode, and even read-only sqlite access
+      # needs to create/write the -shm and -wal files next to the database
+      - db_data:/data
       # host directory, deliberately outside docker volumes: survives `docker volume rm`
       - ${QR_BACKUP_DIR:-~/qr-menu-backups}:/backups
     depends_on:

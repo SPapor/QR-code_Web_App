@@ -74,7 +74,7 @@ def test_google_callback_reuses_account(test_client, google_enabled, fake_claims
 
 
 def test_google_callback_username_collision_falls_back_to_sub(test_client, google_enabled, fake_claims):
-    test_client.post('/user/register', json={'username': 'user@example.com', 'password': 'pw'})
+    test_client.post('/user/register', json={'username': 'user@example.com', 'password': 'pw12345678'})
     response = callback(test_client, get_state(test_client))
     assert login_username(test_client, response.cookies['refresh_token']) == 'g_google-sub-1'
 

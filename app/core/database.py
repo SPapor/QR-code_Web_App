@@ -20,7 +20,20 @@ class ConnectionProvider(Provider):
 
     @provide(scope=Scope.APP)
     def engine(self, db_url: DatabaseUrl) -> AsyncEngine:
-        return create_async_engine(str(db_url), echo=False)
+        engine = create_async_engine(str(db_url), echo=False)
+        if engine.dialect.name == "sqlite":
+
+            @sqlalchemy.event.listens_for(engine.sync_engine, "connect")
+            def set_sqlite_pragmas(dbapi_connection, _connection_record):
+                # WAL lets scan redirects write while readers are active;
+                # busy_timeout waits out short write locks instead of raising "database is locked"
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.execute("PRAGMA synchronous=NORMAL")
+                cursor.execute("PRAGMA busy_timeout=5000")
+                cursor.close()
+
+        return engine
 
     @provide(scope=Scope.REQUEST)
     async def session(self, engine: AsyncEngine) -> AsyncIterable[AsyncSession]:

@@ -1,5 +1,5 @@
 import io
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
@@ -15,6 +15,12 @@ from qr_code.services import QrCodeService
 
 router = APIRouter(route_class=DishkaRoute)
 
+# QR content never changes for a given id, so browsers may cache the rendered image
+IMAGE_CACHE_HEADERS = {"Cache-Control": "public, max-age=86400"}
+
+QrName = Annotated[str, Query(min_length=1, max_length=100)]
+QrLink = Annotated[str, Query(min_length=1, max_length=2048, pattern=r"^https?://")]
+
 
 @router.get("/{qr_code_id}/image")
 async def read_item(
@@ -25,12 +31,12 @@ async def read_item(
 ):
     if fmt == "svg":
         svg = await qr_code_service.get_svg_by_qr_code_id(qr_code_id)
-        return Response(content=svg, media_type="image/svg+xml")
+        return Response(content=svg, media_type="image/svg+xml", headers=IMAGE_CACHE_HEADERS)
     image = await qr_code_service.get_image_by_qr_code_id(qr_code_id, box_size=scale)
     image_io = io.BytesIO()
     image.save(image_io, format='PNG')
     image_bytes = image_io.getvalue()
-    return Response(content=image_bytes, media_type="image/png")
+    return Response(content=image_bytes, media_type="image/png", headers=IMAGE_CACHE_HEADERS)
 
 
 @router.get("/")
@@ -41,8 +47,8 @@ async def get_all_user_qr_codes(qr_code_service: FromDishka[QrCodeService], user
 @router.post("/")
 async def create_qr_code(
     qr_code_service: FromDishka[QrCodeService],
-    name: str,
-    link: str,
+    name: QrName,
+    link: QrLink,
     user_id: UUID = Depends(logged_in_user_id),
     _session: AsyncSession = Depends(auto_commit),
 ):
@@ -84,8 +90,8 @@ async def redirect(
 async def edit(
     qr_code_service: FromDishka[QrCodeService],
     qr_code_id: UUID,
-    name: str,
-    link: str,
+    name: QrName,
+    link: QrLink,
     user_id: UUID = Depends(logged_in_user_id),
     _session: AsyncSession = Depends(auto_commit),
 ) -> QrCode:

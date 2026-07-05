@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import logging
 import time
@@ -31,7 +32,8 @@ class AuthService:
         self.refresh_session_repo = refresh_session_repo
 
     async def create_auth(self, user_id: UUID, username: str, password: str) -> Auth:
-        password_hash = self.get_password_hash(password)
+        # bcrypt takes ~100ms of pure CPU; keep it off the event loop
+        password_hash = await asyncio.to_thread(self.get_password_hash, password)
         auth = Auth(user_id=user_id, username=username, password_hash=password_hash)
         auth = await self.auth_repo.create_and_get(auth)
         return auth
@@ -43,7 +45,7 @@ class AuthService:
             logger.info("login failed for username=%r: unknown username", username)
             raise InvalidLoginOrPasswordError
 
-        if not self.verify_password(password, user.password_hash):
+        if not await asyncio.to_thread(self.verify_password, password, user.password_hash):
             logger.info("login failed for username=%r: wrong password", username)
             raise InvalidLoginOrPasswordError
 

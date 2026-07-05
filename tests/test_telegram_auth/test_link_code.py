@@ -15,7 +15,7 @@ def bot_secret(monkeypatch):
 
 @pytest.fixture
 def site_account(test_client):
-    response = test_client.post('/user/register', json={'username': 'site_user', 'password': 'pw'})
+    response = test_client.post('/user/register', json={'username': 'site_user', 'password': 'pw12345678'})
     assert response.status_code == 200, response.json()
     return response.json()['access_token']
 
