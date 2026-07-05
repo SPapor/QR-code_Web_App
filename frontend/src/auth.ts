@@ -87,7 +87,7 @@ export async function authFetch(url: string, opts: RequestInit = {}): Promise<Re
   return r;
 }
 
-function saveTokens({ access_token, expires_in }: TokenResponse): void {
+export function saveTokens({ access_token, expires_in }: TokenResponse): void {
   localStorage.setItem(ACCESS_KEY, access_token);
   const username = usernameFromToken(access_token);
   if (username) localStorage.setItem(USER_KEY, username);

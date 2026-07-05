@@ -5,6 +5,7 @@
   <title>qr/studio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#14100C">
+  <script src="/theme-init.js"></script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="qr/studio">
@@ -56,23 +57,74 @@
     <div class="top-side">
       <div class="user">
         <span id="user-name"></span>
-        <button id="btn-telegram" type="button" hidden title="Привязать этот аккаунт к Telegram-боту" data-i18n-title="tgLinkTitle">Telegram ↗</button>
         <button id="btn-logout" type="button" data-i18n="btnLogout">Выйти</button>
       </div>
-      <div class="prefs">
-        <button id="btn-settings" type="button" aria-haspopup="true" aria-expanded="false" title="Настройки" aria-label="Настройки" data-i18n-title="settings" data-i18n-aria="settings">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
-        <div id="settings-menu" class="settings-menu" hidden>
-          <div id="settings-user" class="settings-user" hidden></div>
-          <div class="settings-label" data-i18n="language">Язык</div>
-          <button type="button" class="lang-opt" data-lang="ru" role="menuitemradio" aria-checked="false">Русский</button>
-          <button type="button" class="lang-opt" data-lang="en" role="menuitemradio" aria-checked="false">English</button>
-        </div>
-      </div>
+      <button id="btn-settings" type="button" aria-haspopup="dialog" title="Настройки" aria-label="Настройки" data-i18n-title="settings" data-i18n-aria="settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
     </div>
   </div>
 </header>
+
+<!-- ── Settings modal ────────────────────────────────────────────── -->
+<div id="settings-modal" class="modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card settings-card" role="dialog" aria-modal="true" aria-label="Настройки" data-i18n-aria="settings">
+    <button class="modal-close" type="button" data-close aria-label="Закрыть" data-i18n-aria="close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <h2>Set<em>tings.</em></h2>
+
+    <section class="set-block" id="set-profile" hidden>
+      <div class="set-label" data-i18n="profile">Профиль</div>
+      <div class="profile-name" id="settings-user"></div>
+      <div class="profile-links" id="profile-links"></div>
+      <button id="btn-telegram" type="button" hidden title="Привязать этот аккаунт к Telegram-боту" data-i18n-title="tgLinkTitle">Telegram ↗</button>
+    </section>
+
+    <section class="set-block">
+      <div class="set-label" data-i18n="theme">Тема</div>
+      <div class="seg" id="theme-seg" role="group" aria-label="Тема" data-i18n-aria="theme">
+        <button type="button" data-theme-opt="light" data-i18n="themeLight">Светлая</button>
+        <button type="button" data-theme-opt="dark" data-i18n="themeDark">Тёмная</button>
+        <button type="button" data-theme-opt="system" data-i18n="themeSystem">Как в системе</button>
+      </div>
+    </section>
+
+    <section class="set-block">
+      <div class="set-label" data-i18n="palette">Палитра</div>
+      <div class="swatches" id="palette-swatches" role="group" aria-label="Палитра" data-i18n-aria="palette">
+        <button type="button" class="swatch" data-palette-opt="terracotta" style="--sw:#D97757;--sw2:#E9B44C" title="Терракота" data-i18n-title="palTerracotta"></button>
+        <button type="button" class="swatch" data-palette-opt="ocean" style="--sw:#3E7CB1;--sw2:#64B6AC" title="Океан" data-i18n-title="palOcean"></button>
+        <button type="button" class="swatch" data-palette-opt="forest" style="--sw:#4E9464;--sw2:#C9A227" title="Лес" data-i18n-title="palForest"></button>
+        <button type="button" class="swatch" data-palette-opt="plum" style="--sw:#A05EA3;--sw2:#E28F6A" title="Слива" data-i18n-title="palPlum"></button>
+      </div>
+    </section>
+
+    <section class="set-block">
+      <div class="set-label" data-i18n="language">Язык</div>
+      <div class="seg" id="lang-seg" role="group" aria-label="Язык" data-i18n-aria="language">
+        <button type="button" data-lang="ru">Русский</button>
+        <button type="button" data-lang="en">English</button>
+      </div>
+    </section>
+
+    <section class="set-block" id="set-password" hidden>
+      <div class="set-label" data-i18n="changePassword">Смена пароля</div>
+      <form id="pwForm" class="pw-form" autocomplete="off">
+        <label class="field">
+          <span class="field-label" data-i18n="currentPassword">Текущий пароль</span>
+          <input name="old_password" type="password" autocomplete="current-password" required>
+        </label>
+        <label class="field">
+          <span class="field-label" data-i18n="newPassword">Новый пароль</span>
+          <input name="new_password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+        </label>
+        <button type="submit" class="btn-primary" data-i18n="btnChangePw">Сменить пароль</button>
+      </form>
+    </section>
+  </div>
+</div>
 
 <!-- ── Login ─────────────────────────────────────────────────────── -->
 <section data-view id="view-login">

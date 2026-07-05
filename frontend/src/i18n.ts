@@ -22,8 +22,27 @@ const STRINGS = {
   // top bar
   btnLogout    : { ru: 'Выйти', en: 'Log out' },
   tgLinkTitle  : { ru: 'Привязать этот аккаунт к Telegram-боту', en: 'Link this account to the Telegram bot' },
-  settings     : { ru: 'Настройки', en: 'Settings' },
-  language     : { ru: 'Язык', en: 'Language' },
+
+  // settings modal
+  settings       : { ru: 'Настройки', en: 'Settings' },
+  language       : { ru: 'Язык', en: 'Language' },
+  profile        : { ru: 'Профиль', en: 'Profile' },
+  linked         : { ru: 'привязан', en: 'linked' },
+  notLinked      : { ru: 'не привязан', en: 'not linked' },
+  theme          : { ru: 'Тема', en: 'Theme' },
+  themeLight     : { ru: 'Светлая', en: 'Light' },
+  themeDark      : { ru: 'Тёмная', en: 'Dark' },
+  themeSystem    : { ru: 'Как в системе', en: 'System' },
+  palette        : { ru: 'Палитра', en: 'Palette' },
+  palTerracotta  : { ru: 'Терракота', en: 'Terracotta' },
+  palOcean       : { ru: 'Океан', en: 'Ocean' },
+  palForest      : { ru: 'Лес', en: 'Forest' },
+  palPlum        : { ru: 'Слива', en: 'Plum' },
+  changePassword : { ru: 'Смена пароля', en: 'Change password' },
+  currentPassword: { ru: 'Текущий пароль', en: 'Current password' },
+  newPassword    : { ru: 'Новый пароль', en: 'New password' },
+  btnChangePw    : { ru: 'Сменить пароль', en: 'Change password' },
+  flashPwChanged : { ru: 'Пароль изменён', en: 'Password changed' },
 
   // dashboard
   newCode          : { ru: '+ Новый код', en: '+ New code' },
@@ -86,6 +105,7 @@ const STRINGS = {
   'auth.0004'   : { ru: 'Неверный логин или пароль', en: 'Wrong username or password' },
   'auth.0005'   : { ru: 'Нужны права администратора', en: 'Admin rights required' },
   'auth.0006'   : { ru: 'Слишком много попыток входа — попробуйте позже', en: 'Too many attempts — try again later' },
+  'auth.0007'   : { ru: 'Неверный текущий пароль', en: 'Current password is incorrect' },
   'user.0002'   : { ru: 'Такой логин уже занят', en: 'This username is already taken' },
   'qr_code.0001': { ru: 'Код не найден', en: 'Code not found' },
   'core.0003'   : { ru: 'Ошибка сервера — попробуйте позже', en: 'Server error — try again later' },

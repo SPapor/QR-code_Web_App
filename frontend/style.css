@@ -1,8 +1,13 @@
-/* ─── Design tokens ────────────────────────────────────────────── */
+/* ─── Design tokens ────────────────────────────────────────────────
+   Theme: JS resolves the user's choice (light / dark / system) into
+   data-theme="light|dark" on <html> before first paint (theme-init.js),
+   so dark styles live under [data-theme="dark"], not media queries.
+   Palette: data-palette="…" overrides the --pal-* accent hues below;
+   no attribute means the default terracotta (the var() fallbacks). */
 :root {
-  --primary-500: #D97757;
-  --primary-700: #B24A2F;
-  --secondary-500: #E9B44C;
+  --primary-500: var(--pal-p500, #D97757);
+  --primary-700: var(--pal-p700, #B24A2F);
+  --secondary-500: var(--pal-s500, #E9B44C);
   --accent-pink: #E7C6A8;
 
   --n-05: #FAF5EE;
@@ -16,10 +21,10 @@
   --ink: var(--n-90);
   --ink-mute: var(--n-60);
   --rule: rgba(26, 24, 20, 0.12);
-  --hover: rgba(217, 119, 87, 0.07);
+  --hover: color-mix(in srgb, var(--primary-500) 7%, transparent);
   /* chart marks: validated against --paper (dataviz lightness/contrast checks) */
-  --chart-bar: #B24A2F;
-  --chart-bar-hover: #8F3A24;
+  --chart-bar: var(--pal-p700, #B24A2F);
+  --chart-bar-hover: var(--pal-chart-hover, #8F3A24);
 
   --danger: #C0392B;
   --danger-bg: rgba(192, 57, 43, 0.08);
@@ -37,27 +42,56 @@
   --shadow-md: 0 10px 30px -12px rgba(26, 24, 20, 0.18);
   --shadow-lg: 0 24px 70px -20px rgba(26, 24, 20, 0.35);
 
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary-500: #E8906C;
-    --primary-700: #D97757;
-    --bg: #151009;
-    --paper: #201812;
-    --ink: #F2E9DE;
-    --ink-mute: #A5988A;
-    --rule: rgba(242, 233, 222, 0.12);
-    --hover: rgba(232, 144, 108, 0.08);
-    --chart-bar: #CE6845;
-    --chart-bar-hover: #E8906C;
-    --danger: #FF6B5C;
-    --danger-bg: rgba(255, 107, 92, 0.10);
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.3), 0 4px 12px -6px rgba(0,0,0,.5);
-    --shadow-md: 0 12px 30px -12px rgba(0,0,0,.6);
-    --shadow-lg: 0 24px 70px -20px rgba(0,0,0,.75);
-  }
+:root[data-theme="dark"] {
+  --primary-500: var(--pal-p500-dark, #E8906C);
+  --primary-700: var(--pal-p700-dark, #D97757);
+  --bg: #151009;
+  --paper: #201812;
+  --ink: #F2E9DE;
+  --ink-mute: #A5988A;
+  --rule: rgba(242, 233, 222, 0.12);
+  --hover: color-mix(in srgb, var(--primary-500) 8%, transparent);
+  --chart-bar: var(--pal-chart-dark, #CE6845);
+  --chart-bar-hover: var(--pal-p500-dark, #E8906C);
+  --danger: #FF6B5C;
+  --danger-bg: rgba(255, 107, 92, 0.10);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3), 0 4px 12px -6px rgba(0,0,0,.5);
+  --shadow-md: 0 12px 30px -12px rgba(0,0,0,.6);
+  --shadow-lg: 0 24px 70px -20px rgba(0,0,0,.75);
+
+  color-scheme: dark;
+}
+
+/* ─── Accent palettes ──────────────────────────────────────────── */
+:root[data-palette="ocean"] {
+  --pal-p500: #3E7CB1;
+  --pal-p700: #2C5E8A;
+  --pal-s500: #64B6AC;
+  --pal-p500-dark: #7FAFD6;
+  --pal-p700-dark: #3E7CB1;
+  --pal-chart-hover: color-mix(in srgb, var(--pal-p700) 78%, black);
+  --pal-chart-dark: #5E97C4;
+}
+:root[data-palette="forest"] {
+  --pal-p500: #4E9464;
+  --pal-p700: #2F7048;
+  --pal-s500: #C9A227;
+  --pal-p500-dark: #7BBF8E;
+  --pal-p700-dark: #4E9464;
+  --pal-chart-hover: color-mix(in srgb, var(--pal-p700) 78%, black);
+  --pal-chart-dark: #61A877;
+}
+:root[data-palette="plum"] {
+  --pal-p500: #A05EA3;
+  --pal-p700: #7C3F80;
+  --pal-s500: #E28F6A;
+  --pal-p500-dark: #C48BC7;
+  --pal-p700-dark: #A05EA3;
+  --pal-chart-hover: color-mix(in srgb, var(--pal-p700) 78%, black);
+  --pal-chart-dark: #B274B5;
 }
 
 /* ─── Reset / base ─────────────────────────────────────────────── */
@@ -82,9 +116,9 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(560px 420px at 12% -6%, rgba(217, 119, 87, 0.10), transparent 65%),
-    radial-gradient(520px 400px at 94% 8%, rgba(233, 180, 76, 0.13), transparent 65%),
-    radial-gradient(640px 520px at 78% 108%, rgba(231, 198, 168, 0.12), transparent 65%);
+    radial-gradient(560px 420px at 12% -6%, color-mix(in srgb, var(--primary-500) 10%, transparent), transparent 65%),
+    radial-gradient(520px 400px at 94% 8%, color-mix(in srgb, var(--secondary-500) 13%, transparent), transparent 65%),
+    radial-gradient(640px 520px at 78% 108%, color-mix(in srgb, var(--accent-pink) 12%, transparent), transparent 65%);
 }
 
 ::selection { background: var(--secondary-500); color: var(--n-90); }
@@ -120,9 +154,7 @@ h1 em {
   font-weight: 500;
   color: var(--primary-700);
 }
-@media (prefers-color-scheme: dark) {
-  h1 em { color: var(--primary-500); }
-}
+[data-theme="dark"] h1 em { color: var(--primary-500); }
 
 /* ─── Views ────────────────────────────────────────────────────── */
 section[data-view] { display: none; }
@@ -163,9 +195,7 @@ section[data-view]:not([hidden]) {
 }
 .wordmark .slash { color: var(--ink-mute); font-weight: 400; }
 .wordmark .dot { color: var(--primary-700); }
-@media (prefers-color-scheme: dark) {
-  .wordmark .dot { color: var(--secondary-500); }
-}
+[data-theme="dark"] .wordmark .dot { color: var(--secondary-500); }
 
 .top .user {
   display: flex;
@@ -199,9 +229,7 @@ body:not([data-route="view-dash"]):not([data-route="view-edit"]) .top .user {
   gap: 14px;
 }
 
-/* settings dropdown — available on every view, including login */
-.prefs { position: relative; }
-
+/* settings button — available on every view, including login */
 #btn-settings {
   display: grid;
   place-items: center;
@@ -220,67 +248,130 @@ body:not([data-route="view-dash"]):not([data-route="view-edit"]) .top .user {
   transform: rotate(30deg);
 }
 
-.settings-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 10px);
-  min-width: 190px;
-  padding: 8px;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-md);
-  z-index: 30;
-  animation: view-in .25s cubic-bezier(.2, .7, .3, 1) both;
+/* ─── Settings modal ───────────────────────────────────────────── */
+.settings-card {
+  max-width: 400px;
+  text-align: left;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
 }
 
-.settings-user {
-  padding: 6px 10px 10px;
-  margin-bottom: 6px;
+.settings-card h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+.settings-card h2 em {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--primary-700);
+}
+[data-theme="dark"] .settings-card h2 em { color: var(--primary-500); }
+
+.set-block {
+  padding: 16px 0;
   border-bottom: 1px solid var(--rule);
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
-  color: var(--ink-mute);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
+.set-block:last-child { border-bottom: 0; padding-bottom: 4px; }
 
-.settings-label {
-  padding: 4px 10px 6px;
+.set-label {
   font-family: var(--mono);
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-mute);
+  margin-bottom: 10px;
 }
 
-.lang-opt {
+/* profile */
+.profile-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-links {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.link-chip {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  padding: 8px 10px;
-  font: 13px/1.3 var(--sans);
-  text-align: left;
-  color: var(--ink);
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+.link-chip.on { color: var(--ink); border-color: color-mix(in srgb, var(--primary-500) 45%, transparent); }
+.link-chip.on::before { content: '✓'; color: var(--primary-700); font-weight: 600; }
+[data-theme="dark"] .link-chip.on::before { color: var(--primary-500); }
+
+#btn-telegram {
+  margin-top: 8px;
+  font: 12.5px/1.3 var(--sans);
   background: none;
   border: 0;
-  border-radius: var(--r-sm);
   cursor: pointer;
-  transition: background .15s ease;
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule);
+  padding: 0 0 1px;
+  transition: border-color .2s ease;
 }
-.lang-opt:hover { background: var(--hover); }
-.lang-opt.active::after {
-  content: '✓';
-  color: var(--primary-700);
-  font-weight: 600;
+#btn-telegram:hover { border-color: var(--ink); }
+
+/* segmented control (theme, language) */
+.seg {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-pill);
+  width: fit-content;
+  max-width: 100%;
 }
-@media (prefers-color-scheme: dark) {
-  .lang-opt.active::after { color: var(--primary-500); }
+.seg button {
+  border: 0;
+  background: none;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  transition: background .15s, color .15s;
+  white-space: nowrap;
 }
+.seg button:hover { color: var(--ink); }
+.seg button.active { background: var(--n-90); color: var(--paper); }
+[data-theme="dark"] .seg button.active { background: var(--secondary-500); color: var(--n-100); }
+
+/* palette swatches */
+.swatches { display: flex; gap: 12px; }
+.swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--sw) 0 55%, var(--sw2) 55% 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.swatch:hover { transform: scale(1.12); }
+.swatch.active {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink);
+}
+
+/* change password form */
+.pw-form .field { margin-bottom: 12px; }
+.pw-form button[type="submit"] { margin-top: 2px; }
 
 /* ─── Auth (login / register) ──────────────────────────────────── */
 .auth {
@@ -417,7 +508,7 @@ input:focus {
   border-radius: 6px;
   transition: color .15s, background .15s;
 }
-.btn-eye:hover { color: var(--ink); background: rgba(217, 119, 87, 0.08); }
+.btn-eye:hover { color: var(--ink); background: var(--hover); }
 
 /* ─── Buttons ──────────────────────────────────────────────────── */
 button { font: inherit; cursor: pointer; }
@@ -444,10 +535,8 @@ button { font: inherit; cursor: pointer; }
 }
 .btn-primary:active { transform: none; }
 .btn-primary[disabled] { opacity: .55; pointer-events: none; }
-@media (prefers-color-scheme: dark) {
-  .btn-primary { background: var(--secondary-500); color: var(--n-100); }
-  .btn-primary:hover { box-shadow: 0 10px 24px -10px rgba(247, 230, 111, 0.35); }
-}
+[data-theme="dark"] .btn-primary { background: var(--secondary-500); color: var(--n-100); }
+[data-theme="dark"] .btn-primary:hover { box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--secondary-500) 35%, transparent); }
 
 .btn-block { width: 100%; margin-top: 8px; }
 
@@ -482,10 +571,8 @@ button { font: inherit; cursor: pointer; }
   0%, 100% { box-shadow: 0 0 0 0 var(--danger-bg); }
   50%      { box-shadow: 0 0 0 5px var(--danger-bg); }
 }
-@media (prefers-color-scheme: dark) {
-  .btn-icon:hover { color: var(--primary-500); }
-  .btn-icon.danger.arm { color: var(--n-100); }
-}
+[data-theme="dark"] .btn-icon:hover { color: var(--primary-500); }
+[data-theme="dark"] .btn-icon.danger.arm { color: var(--n-100); }
 
 /* ─── Dashboard ────────────────────────────────────────────────── */
 #view-dash .frame { padding-bottom: 96px; }
@@ -553,9 +640,7 @@ button { font: inherit; cursor: pointer; }
   background: var(--n-90);
   color: var(--paper);
 }
-@media (prefers-color-scheme: dark) {
-  .view-toggle button.active { background: var(--secondary-500); color: var(--n-100); }
-}
+[data-theme="dark"] .view-toggle button.active { background: var(--secondary-500); color: var(--n-100); }
 
 /* ─── Editorial list ───────────────────────────────────────────── */
 .list {
@@ -1035,7 +1120,8 @@ button { font: inherit; cursor: pointer; }
 .modal-actions a:hover,
 .modal-actions button:hover { color: var(--ink); border-color: var(--ink); }
 
-body.modal-open { overflow: hidden; }
+body.modal-open,
+body.settings-open { overflow: hidden; }
 
 /* ─── Flash toast ──────────────────────────────────────────────── */
 .flash {
@@ -1058,10 +1144,8 @@ body.modal-open { overflow: hidden; }
 }
 .flash.show { opacity: 1; transform: translateX(-50%); }
 .flash.error { background: var(--danger); color: #fff; }
-@media (prefers-color-scheme: dark) {
-  .flash { background: var(--paper); color: var(--ink); border: 1px solid var(--rule); }
-  .flash.error { background: var(--danger); color: var(--n-100); border: 0; }
-}
+[data-theme="dark"] .flash { background: var(--paper); color: var(--ink); border: 1px solid var(--rule); }
+[data-theme="dark"] .flash.error { background: var(--danger); color: var(--n-100); border: 0; }
 
 /* ─── Print: only the open QR card, as a table tent ────────────── */
 @media print {
