@@ -13,6 +13,10 @@ class InvalidLoginOrPasswordError(AuthError):
     pass
 
 
+class InvalidCurrentPasswordError(AuthError):
+    pass
+
+
 class RefreshTokenRequiredError(AuthError):
     pass
 

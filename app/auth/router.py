@@ -1,15 +1,17 @@
 from datetime import timedelta
+from typing import Annotated
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from auth.errors import InvalidLoginOrPasswordError
+from auth.dependencies import access_token_payload
+from auth.errors import InvalidCurrentPasswordError, InvalidLoginOrPasswordError
 from auth.rate_limit import LoginRateLimiter
-from auth.services import AuthService
+from auth.services import AccessTokenPayload, AuthService
 from core.dependencies import auto_commit
 from core.settings import settings
 
@@ -46,6 +48,27 @@ async def refresh(
 ):
     refresh_token = request.cookies.get("refresh_token")
     access_token, refresh_token = await auth_service.refresh(refresh_token)
+    return token_pair_to_response(access_token, refresh_token)
+
+
+@router.post("/change_password")
+async def change_password(
+    old_password: Annotated[str, Body()],
+    new_password: Annotated[str, Body(min_length=8, max_length=128)],
+    auth_service: FromDishka[AuthService],
+    rate_limiter: FromDishka[LoginRateLimiter],
+    payload: AccessTokenPayload = Depends(access_token_payload),
+    _session: AsyncSession = Depends(auto_commit),
+):
+    # a stolen access token must not allow brute-forcing the current password
+    rate_limit_key = f"pw:{payload.user_id}"
+    rate_limiter.check(rate_limit_key)
+    try:
+        access_token, refresh_token = await auth_service.change_password(payload.user_id, old_password, new_password)
+    except InvalidCurrentPasswordError:
+        rate_limiter.record(rate_limit_key)
+        raise
+    rate_limiter.reset(rate_limit_key)
     return token_pair_to_response(access_token, refresh_token)
 
 

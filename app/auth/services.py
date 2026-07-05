@@ -11,7 +11,12 @@ import jwt
 from fastapi.encoders import jsonable_encoder
 
 from auth.dal import AuthRepo, RefreshSessionRepo
-from auth.errors import InvalidLoginOrPasswordError, NotAuthorizedError, RefreshTokenRequiredError
+from auth.errors import (
+    InvalidCurrentPasswordError,
+    InvalidLoginOrPasswordError,
+    NotAuthorizedError,
+    RefreshTokenRequiredError,
+)
 from auth.models import Auth, RefreshSession
 from core.settings import settings
 
@@ -82,6 +87,18 @@ class AuthService:
             raise NotAuthorizedError
         token_pair = await self.issue_token_pair(auth)
         return token_pair
+
+    async def change_password(self, user_id: UUID, old_password: str, new_password: str) -> tuple[str, str]:
+        auth = await self.auth_repo.get_by_user_id(user_id)
+        if not await asyncio.to_thread(self.verify_password, old_password, auth.password_hash):
+            logger.info("password change failed for username=%r: wrong current password", auth.username)
+            raise InvalidCurrentPasswordError
+        auth.password_hash = await asyncio.to_thread(self.get_password_hash, new_password)
+        await self.auth_repo.update(auth)
+        # revoke every existing session; the response carries a fresh pair for the current one
+        await self.refresh_session_repo.delete_by_auth_id(auth.id)
+        logger.info("password changed for username=%r", auth.username)
+        return await self.issue_token_pair(auth)
 
     async def logout(self, refresh_token: str | None) -> None:
         if not refresh_token:

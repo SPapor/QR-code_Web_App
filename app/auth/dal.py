@@ -43,6 +43,9 @@ class RefreshSessionCrud(CrudBase[UUID, DTO]):
     async def delete_expired(self, now: int) -> None:
         await self.session.execute(delete(self.table).where(self.table.c.expires_at < now))
 
+    async def delete_by_auth_id(self, auth_id: UUID) -> None:
+        await self.session.execute(delete(self.table).where(self.table.c.auth_id == auth_id))
+
 
 class RefreshSessionRepo(RepoBase[UUID, RefreshSession]):
     crud: RefreshSessionCrud
@@ -52,3 +55,6 @@ class RefreshSessionRepo(RepoBase[UUID, RefreshSession]):
 
     async def delete_expired(self, now: int) -> None:
         await self.crud.delete_expired(now)
+
+    async def delete_by_auth_id(self, auth_id: UUID) -> None:
+        await self.crud.delete_by_auth_id(auth_id)

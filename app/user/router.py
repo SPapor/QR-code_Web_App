@@ -6,12 +6,31 @@ from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
+from auth.dependencies import access_token_payload
 from auth.rate_limit import RegisterRateLimiter
 from auth.router import client_ip, token_pair_to_response
+from auth.services import AccessTokenPayload
 from core.dependencies import auto_commit
+from google_auth.dal import GoogleLinkRepo
+from telegram_auth.dal import TelegramLinkRepo
 from user.services import UserService
 
 router = APIRouter(route_class=DishkaRoute)
+
+
+@router.get("/me")
+async def me(
+    telegram_link_repo: FromDishka[TelegramLinkRepo],
+    google_link_repo: FromDishka[GoogleLinkRepo],
+    payload: AccessTokenPayload = Depends(access_token_payload),
+):
+    telegram_link = await telegram_link_repo.get_by_user_id(payload.user_id)
+    google_link = await google_link_repo.get_by_user_id(payload.user_id)
+    return {
+        "username": payload.username,
+        "telegram_linked": telegram_link is not None,
+        "google_linked": google_link is not None,
+    }
 
 
 @router.post("/register")
