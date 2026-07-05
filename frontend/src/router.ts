@@ -1,22 +1,23 @@
 import { login as apiLogin, register as apiRegister, logout as apiLogout, isLoggedIn, getUsername, refreshToken } from './auth';
+import { t, type MsgKey } from './i18n';
 import { initOAuthButtons, openTelegramBot, syncTelegramButton } from './oauth';
 import { loadList, syncEditView } from './qr';
 import { flash, apiErr } from './ui';
 
 const VIEWS = [...document.querySelectorAll<HTMLElement>('[data-view]')];
 const hideAll  = () => VIEWS.forEach(v => (v.hidden = true));
-const TITLES: Record<string, string> = {
-  'view-login': 'вход',
-  'view-reg'  : 'регистрация',
-  'view-dash' : 'ваши коды',
-  'view-edit' : 'код',
+const TITLE_KEYS: Record<string, MsgKey> = {
+  'view-login': 'titleLogin',
+  'view-reg'  : 'titleReg',
+  'view-dash' : 'titleDash',
+  'view-edit' : 'titleEdit',
 };
 const showView = (id: string) => {
   hideAll();
   const e = document.getElementById(id);
   if (e) e.hidden = false;
   document.body.dataset.route = id;
-  document.title = TITLES[id] ? `qr/studio — ${TITLES[id]}` : 'qr/studio';
+  document.title = TITLE_KEYS[id] ? `qr/studio — ${t(TITLE_KEYS[id])}` : 'qr/studio';
 };
 
 function syncUser(): void {
@@ -73,12 +74,18 @@ async function handleOAuthReturn(): Promise<void> {
       await refreshToken();
       location.hash = '#dash';
     } catch {
-      flash('Не удалось завершить вход', 'error');
+      flash(t('flashOauthFinishFail'), 'error');
     }
   } else {
-    flash('Вход через внешний сервис не удался', 'error');
+    flash(t('flashOauthFail'), 'error');
   }
 }
+
+// re-render the current view's translatable bits (tab title) on language change
+window.addEventListener('langchange', () => {
+  const id = document.body.dataset.route;
+  if (id) showView(id);
+});
 
 window.addEventListener('hashchange', handleRoute);
 window.addEventListener('load', async () => {

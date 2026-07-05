@@ -1,5 +1,6 @@
 import { authFetch } from './auth';
 import { API_BASE } from './config';
+import { dateLocale, pluralCodes, pluralScans, scansShort, t } from './i18n';
 import { escapeHTML, escapeAttr, flash, apiErr } from './ui';
 
 export interface QrCode {
@@ -72,9 +73,9 @@ export function qrPublicUrl(id: string): string {
 async function copyText(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
-    flash('Ссылка скопирована');
+    flash(t('flashCopied'));
   } catch {
-    flash('Не удалось скопировать', 'error');
+    flash(t('flashCopyFail'), 'error');
   }
 }
 
@@ -85,26 +86,12 @@ const ICON_EDIT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
 const ICON_TRASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="m19 6-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`;
 const ICON_COPY = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 
-function pluralCodes(n: number): string {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return 'код';
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'кода';
-  return 'кодов';
-}
-
-function pluralScans(n: number): string {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return 'сканирование';
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'сканирования';
-  return 'сканирований';
-}
-
 function relTime(ts: number): string {
   const diff = Math.floor(Date.now() / 1000) - ts;
-  if (diff < 60) return 'только что';
-  if (diff < 3600) return `${Math.floor(diff / 60)} мин назад`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} ч назад`;
-  return new Date(ts * 1000).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (diff < 60) return t('justNow');
+  if (diff < 3600) return t('minAgo', { n: Math.floor(diff / 60) });
+  if (diff < 86400) return t('hourAgo', { n: Math.floor(diff / 3600) });
+  return new Date(ts * 1000).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function scansSummary(q: QrCode): string {
@@ -150,9 +137,9 @@ function emptyHtml(): string {
   return `
     <div class="empty">
       <div class="icon"><svg width="52" height="52"><use href="#qr"/></svg></div>
-      <h2>Пока пусто.</h2>
-      <p>Создайте первый QR-код — это займёт меньше минуты.</p>
-      <button class="btn-primary" type="button" data-new>+ Создать код</button>
+      <h2>${t('emptyTitle')}</h2>
+      <p>${t('emptyText')}</p>
+      <button class="btn-primary" type="button" data-new>${t('emptyCreate')}</button>
     </div>`;
 }
 
@@ -161,17 +148,17 @@ function rowHtml(q: QrCode, i: number): string {
   return `
     <div class="row" data-id="${escapeAttr(String(q.id))}" style="--i:${i}">
       <div class="n">${String(i + 1).padStart(2, '0')}</div>
-      <button class="qr-thumb" type="button" data-open title="Открыть QR">
+      <button class="qr-thumb" type="button" data-open title="${escapeAttr(t('openQr'))}">
         <img src="${qrImageUrl(q.id)}" alt="" loading="lazy">
       </button>
       <div class="name">${escapeHTML(q.name)}</div>
       <div class="link"><a href="${escapeAttr(q.link)}" target="_blank" rel="noopener">${escapeHTML(displayLink(q.link))}</a></div>
-      <div class="scans" title="${escapeAttr(scansSummary(q))}">${scans}&thinsp;скан.</div>
+      <div class="scans" title="${escapeAttr(scansSummary(q))}">${scans}&thinsp;${scansShort(scans)}</div>
       <div class="actions">
-        <button class="btn-icon" type="button" data-copy title="Скопировать ссылку QR" aria-label="Скопировать ссылку QR">${ICON_COPY}</button>
-        <button class="btn-icon" type="button" data-open title="Открыть QR" aria-label="Открыть QR">${ICON_OPEN}</button>
-        <button class="btn-icon" type="button" data-edit title="Редактировать" aria-label="Редактировать">${ICON_EDIT}</button>
-        <button class="btn-icon danger" type="button" data-delete title="Удалить" aria-label="Удалить">${ICON_TRASH}</button>
+        <button class="btn-icon" type="button" data-copy title="${escapeAttr(t('copyQrLink'))}" aria-label="${escapeAttr(t('copyQrLink'))}">${ICON_COPY}</button>
+        <button class="btn-icon" type="button" data-open title="${escapeAttr(t('openQr'))}" aria-label="${escapeAttr(t('openQr'))}">${ICON_OPEN}</button>
+        <button class="btn-icon" type="button" data-edit title="${escapeAttr(t('editAction'))}" aria-label="${escapeAttr(t('editAction'))}">${ICON_EDIT}</button>
+        <button class="btn-icon danger" type="button" data-delete title="${escapeAttr(t('deleteAction'))}" aria-label="${escapeAttr(t('deleteAction'))}">${ICON_TRASH}</button>
       </div>
     </div>`;
 }
@@ -180,7 +167,7 @@ function cardHtml(q: QrCode, i: number): string {
   const scans = q.scan_count ?? 0;
   return `
     <div class="card" data-id="${escapeAttr(String(q.id))}" style="--i:${i}">
-      <button class="card-thumb" type="button" data-open title="Открыть QR">
+      <button class="card-thumb" type="button" data-open title="${escapeAttr(t('openQr'))}">
         <img src="${qrImageUrl(q.id)}" alt="" loading="lazy">
       </button>
       <div class="card-body">
@@ -188,11 +175,11 @@ function cardHtml(q: QrCode, i: number): string {
         <a class="link" href="${escapeAttr(q.link)}" target="_blank" rel="noopener">${escapeHTML(displayLink(q.link))}</a>
       </div>
       <div class="card-foot">
-        <span class="scans-chip" title="${escapeAttr(scansSummary(q))}">${scans}&thinsp;скан.</span>
+        <span class="scans-chip" title="${escapeAttr(scansSummary(q))}">${scans}&thinsp;${scansShort(scans)}</span>
         <div class="actions">
-          <button class="btn-icon" type="button" data-copy title="Скопировать ссылку QR" aria-label="Скопировать ссылку QR">${ICON_COPY}</button>
-          <button class="btn-icon" type="button" data-edit title="Редактировать" aria-label="Редактировать">${ICON_EDIT}</button>
-          <button class="btn-icon danger" type="button" data-delete title="Удалить" aria-label="Удалить">${ICON_TRASH}</button>
+          <button class="btn-icon" type="button" data-copy title="${escapeAttr(t('copyQrLink'))}" aria-label="${escapeAttr(t('copyQrLink'))}">${ICON_COPY}</button>
+          <button class="btn-icon" type="button" data-edit title="${escapeAttr(t('editAction'))}" aria-label="${escapeAttr(t('editAction'))}">${ICON_EDIT}</button>
+          <button class="btn-icon danger" type="button" data-delete title="${escapeAttr(t('deleteAction'))}" aria-label="${escapeAttr(t('deleteAction'))}">${ICON_TRASH}</button>
         </div>
       </div>
     </div>`;
@@ -222,7 +209,7 @@ function renderList(): void {
     : items;
   if (visible.length === 0) {
     list.classList.remove('grid');
-    list.innerHTML = `<div class="list-state">Ничего не нашлось по «${escapeHTML(q)}»</div>`;
+    list.innerHTML = `<div class="list-state">${t('nothingFound', { q: escapeHTML(q) })}</div>`;
     return;
   }
   list.innerHTML = visible.map(grid ? cardHtml : rowHtml).join('');
@@ -241,7 +228,7 @@ export async function loadList(): Promise<void> {
     renderList();
   } catch (err: unknown) {
     list.classList.remove('grid');
-    list.innerHTML = `<div class="list-state">Ошибка: ${escapeHTML(apiErr(err))}</div>`;
+    list.innerHTML = `<div class="list-state">${t('listError', { msg: escapeHTML(apiErr(err)) })}</div>`;
   }
 }
 
@@ -254,7 +241,7 @@ interface ScanStats {
 }
 
 function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+  return new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }).replace('.', '');
 }
 
 /** Inline bar chart: scans per day. One series, so no legend; peak gets the only direct label. */
@@ -280,7 +267,7 @@ function chartHtml(days: ScanStats['days']): string {
   }).join('');
 
   return `
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Сканирования по дням за последние ${days.length} дней">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeAttr(t('chartAria', { n: days.length }))}">
       <line class="axis" x1="0" y1="${BASE}" x2="${W}" y2="${BASE}"/>
       ${bars}
       <text class="tick" x="0" y="${H}">${shortDate(days[0].date)}</text>
@@ -394,16 +381,16 @@ async function handleEditSubmit(evt: Event): Promise<void> {
   evt.preventDefault();
   const name = (document.getElementById('edit-name') as HTMLInputElement).value.trim();
   const rawLink = (document.getElementById('edit-link') as HTMLInputElement).value.trim();
-  if (!name || !rawLink) { flash('Заполните оба поля', 'error'); return; }
+  if (!name || !rawLink) { flash(t('flashFillBoth'), 'error'); return; }
   const link = normalizeLink(rawLink);
-  if (!link) { flash('Некорректная ссылка', 'error'); return; }
+  if (!link) { flash(t('flashBadLink'), 'error'); return; }
 
   const btn = (evt.target as HTMLFormElement).querySelector<HTMLButtonElement>('[type="submit"]');
   if (btn) btn.disabled = true;
   try {
     if (currentEditId != null) await updateQr(currentEditId, name, link);
     else                       await createQr(name, link);
-    flash(currentEditId != null ? 'Сохранено' : 'Код создан');
+    flash(currentEditId != null ? t('flashSaved') : t('flashCreated'));
     location.hash = '#dash';
     await loadList();
   } catch (err: unknown) {
@@ -419,31 +406,31 @@ export function initQrModule(): void {
   const list = document.getElementById('list');
 
   list?.addEventListener('click', e => {
-    const t = e.target as HTMLElement;
+    const target = e.target as HTMLElement;
 
-    if (t.closest('[data-new]')) { openEditView(null); return; }
-    if (t.closest('a')) return; // plain links keep their default behaviour
+    if (target.closest('[data-new]')) { openEditView(null); return; }
+    if (target.closest('a')) return; // plain links keep their default behaviour
 
-    const row = t.closest<HTMLElement>('[data-id]');
+    const row = target.closest<HTMLElement>('[data-id]');
     if (!row?.dataset.id) return;
     const q = items.find(x => String(x.id) === row.dataset.id);
     if (!q) return;
 
-    if (t.closest('[data-copy]')) { void copyText(qrPublicUrl(q.id)); return; }
-    if (t.closest('[data-open]')) { openModal(q); return; }
-    if (t.closest('[data-edit]')) { openEditView(q.id); return; }
+    if (target.closest('[data-copy]')) { void copyText(qrPublicUrl(q.id)); return; }
+    if (target.closest('[data-open]')) { openModal(q); return; }
+    if (target.closest('[data-edit]')) { openEditView(q.id); return; }
 
-    const del = t.closest<HTMLElement>('[data-delete]');
+    const del = target.closest<HTMLElement>('[data-delete]');
     if (del) {
       // two-step delete: first click arms the button, second confirms
       if (!del.classList.contains('arm')) {
         del.classList.add('arm');
-        flash('Нажмите ещё раз, чтобы удалить', 'info', 2200);
+        flash(t('flashDeleteArm'), 'info', 2200);
         setTimeout(() => del.classList.remove('arm'), 2400);
         return;
       }
       deleteQr(String(q.id))
-        .then(() => { flash('Код удалён'); return loadList(); })
+        .then(() => { flash(t('flashDeleted')); return loadList(); })
         .catch((err: unknown) => flash(apiErr(err), 'error'));
     }
   });
@@ -479,5 +466,12 @@ export function initQrModule(): void {
     const { type } = (ev as CustomEvent<{ type: string }>).detail;
     if (type === 'login' || type === 'refresh') loadList();
     if (type === 'logout') closeModal();
+  });
+
+  // dynamic templates hold translated strings — redraw them on language change
+  window.addEventListener('langchange', () => {
+    if (document.body.dataset.route !== 'view-dash') return;
+    updateCount(items.length);
+    renderList();
   });
 }

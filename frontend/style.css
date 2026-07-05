@@ -193,6 +193,95 @@ body:not([data-route="view-dash"]):not([data-route="view-edit"]) .top .user {
   display: none;
 }
 
+.top-side {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* settings dropdown — available on every view, including login */
+.prefs { position: relative; }
+
+#btn-settings {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--ink-mute);
+  transition: color .2s ease, background .2s ease, transform .3s ease;
+}
+#btn-settings:hover {
+  color: var(--ink);
+  background: var(--hover);
+  transform: rotate(30deg);
+}
+
+.settings-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 190px;
+  padding: 8px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  z-index: 30;
+  animation: view-in .25s cubic-bezier(.2, .7, .3, 1) both;
+}
+
+.settings-user {
+  padding: 6px 10px 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-label {
+  padding: 4px 10px 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+}
+
+.lang-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  font: 13px/1.3 var(--sans);
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.lang-opt:hover { background: var(--hover); }
+.lang-opt.active::after {
+  content: '✓';
+  color: var(--primary-700);
+  font-weight: 600;
+}
+@media (prefers-color-scheme: dark) {
+  .lang-opt.active::after { color: var(--primary-500); }
+}
+
 /* ─── Auth (login / register) ──────────────────────────────────── */
 .auth {
   max-width: 400px;
