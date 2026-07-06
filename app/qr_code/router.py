@@ -3,7 +3,7 @@ from typing import Literal
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +18,20 @@ router = APIRouter(route_class=DishkaRoute)
 
 # QR content never changes for a given id, so browsers may cache the rendered image
 IMAGE_CACHE_HEADERS = {"Cache-Control": "public, max-age=86400"}
+
+
+# link-preview fetchers of messengers/social networks; their hits are not real visits
+PREVIEW_BOT_UA_MARKERS = (
+    "telegrambot",
+    "whatsapp",
+    "facebookexternalhit",
+    "twitterbot",
+    "slackbot",
+    "discordbot",
+    "linkedinbot",
+    "skypeuripreview",
+    "viber",
+)
 
 
 # body, not query: user links must not end up in access logs
@@ -79,13 +93,19 @@ async def scan_stats(
     return await qr_code_service.get_scan_stats(user_id, qr_code_id, days)
 
 
-@router.get("/{qr_code_id}")
+@router.api_route("/{qr_code_id}", methods=["GET", "HEAD"])
 async def redirect(
     qr_code_id: UUID,
+    request: Request,
     qr_code_service: FromDishka[QrCodeService],
     _session: AsyncSession = Depends(auto_commit),
 ) -> RedirectResponse:
-    qr_code = await qr_code_service.register_scan(qr_code_id)
+    # HEAD requests and link-preview bots would inflate the stats without being real visits
+    user_agent = request.headers.get("user-agent", "").lower()
+    if request.method == "HEAD" or any(marker in user_agent for marker in PREVIEW_BOT_UA_MARKERS):
+        qr_code = await qr_code_service.get_by_id(qr_code_id)
+    else:
+        qr_code = await qr_code_service.register_scan(qr_code_id)
     return RedirectResponse(url=qr_code.link, status_code=status.HTTP_302_FOUND)
 
 

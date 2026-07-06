@@ -33,6 +33,30 @@ def test_redirect_increments_scan_count(test_client, auth_headers, qr_code):
     assert item['last_scan_at'] is not None
 
 
+def _scan_count(test_client, auth_headers):
+    response = test_client.get('/qr_code/', headers=auth_headers)
+    assert response.status_code == 200, response.json()
+    (item,) = response.json()
+    return item['scan_count']
+
+
+def test_preview_bot_redirects_but_does_not_count(test_client, auth_headers, qr_code):
+    response = test_client.get(
+        f"/qr_code/{qr_code['id']}",
+        follow_redirects=False,
+        headers={'User-Agent': 'TelegramBot (like TwitterBot)'},
+    )
+    assert response.status_code == 302, response.text
+    assert response.headers['location'] == 'https://example.com'
+    assert _scan_count(test_client, auth_headers) == 0
+
+
+def test_head_request_does_not_count(test_client, auth_headers, qr_code):
+    response = test_client.head(f"/qr_code/{qr_code['id']}", follow_redirects=False)
+    assert response.status_code == 302, response.text
+    assert _scan_count(test_client, auth_headers) == 0
+
+
 def test_image_png_default_and_scale(test_client, qr_code):
     small = test_client.get(f"/qr_code/{qr_code['id']}/image")
     big = test_client.get(f"/qr_code/{qr_code['id']}/image?scale=20")
