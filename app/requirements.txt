@@ -1,7 +1,7 @@
 -r requirements-prod.txt
 
 black==25.1.0
-flake8==7.1.1
+flake8==7.3.0
 isort==6.0.0
 mypy==1.16.1
 pytest==8.3.4
