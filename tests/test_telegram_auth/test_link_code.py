@@ -86,7 +86,7 @@ def test_link_by_code_moves_qr_codes_from_auto_account(test_client, bot_secret, 
     bot_access = response.json()['access_token']
     response = test_client.post(
         '/qr_code/',
-        params={'name': 'from bot', 'link': 'https://example.com'},
+        json={'name': 'from bot', 'link': 'https://example.com'},
         headers={'Authorization': f'Bearer {bot_access}'},
     )
     assert response.status_code == 200, response.json()

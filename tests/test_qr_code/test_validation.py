@@ -9,7 +9,7 @@ def auth_headers(test_client):
 
 
 def create(test_client, auth_headers, name='test', link='https://example.com'):
-    return test_client.post('/qr_code/', params={'name': name, 'link': link}, headers=auth_headers)
+    return test_client.post('/qr_code/', json={'name': name, 'link': link}, headers=auth_headers)
 
 
 def test_create_valid_link_200(test_client, auth_headers):
@@ -37,7 +37,7 @@ def test_edit_validates_link_too(test_client, auth_headers):
     qr_code = create(test_client, auth_headers).json()
     response = test_client.put(
         f"/qr_code/{qr_code['id']}",
-        params={'name': 'test', 'link': 'javascript:alert(1)'},
+        json={'name': 'test', 'link': 'javascript:alert(1)'},
         headers=auth_headers,
     )
     assert response.status_code == 422

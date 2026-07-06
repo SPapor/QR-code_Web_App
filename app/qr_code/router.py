@@ -1,10 +1,11 @@
 import io
-from typing import Annotated, Literal
+from typing import Literal
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import RedirectResponse, Response
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -18,8 +19,11 @@ router = APIRouter(route_class=DishkaRoute)
 # QR content never changes for a given id, so browsers may cache the rendered image
 IMAGE_CACHE_HEADERS = {"Cache-Control": "public, max-age=86400"}
 
-QrName = Annotated[str, Query(min_length=1, max_length=100)]
-QrLink = Annotated[str, Query(min_length=1, max_length=2048, pattern=r"^https?://")]
+
+# body, not query: user links must not end up in access logs
+class QrCodePayload(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    link: str = Field(min_length=1, max_length=2048, pattern=r"^https?://")
 
 
 @router.get("/{qr_code_id}/image")
@@ -47,12 +51,11 @@ async def get_all_user_qr_codes(qr_code_service: FromDishka[QrCodeService], user
 @router.post("/")
 async def create_qr_code(
     qr_code_service: FromDishka[QrCodeService],
-    name: QrName,
-    link: QrLink,
+    payload: QrCodePayload,
     user_id: UUID = Depends(logged_in_user_id),
     _session: AsyncSession = Depends(auto_commit),
 ):
-    return await qr_code_service.create_qr_code(user_id, name, link)
+    return await qr_code_service.create_qr_code(user_id, payload.name, payload.link)
 
 
 @router.delete("/{qr_code_id}")
@@ -90,9 +93,8 @@ async def redirect(
 async def edit(
     qr_code_service: FromDishka[QrCodeService],
     qr_code_id: UUID,
-    name: QrName,
-    link: QrLink,
+    payload: QrCodePayload,
     user_id: UUID = Depends(logged_in_user_id),
     _session: AsyncSession = Depends(auto_commit),
 ) -> QrCode:
-    return await qr_code_service.update_qr_code(user_id, qr_code_id, name, link)
+    return await qr_code_service.update_qr_code(user_id, qr_code_id, payload.name, payload.link)

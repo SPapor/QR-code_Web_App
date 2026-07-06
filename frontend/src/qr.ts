@@ -42,15 +42,21 @@ export async function fetchAll(): Promise<QrCode[]> {
 }
 
 export async function createQr(name: string, link: string): Promise<QrCode> {
-  const qs = new URLSearchParams({ name, link });
-  const r  = await authFetch(`${API_BASE}/qr_code/?${qs}`, { method: 'POST' });
+  const r = await authFetch(`${API_BASE}/qr_code/`, {
+    method : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body   : JSON.stringify({ name, link }),
+  });
   if (!r.ok) throw await r.json();
   return r.json();
 }
 
 export async function updateQr(id: string, name: string, link: string): Promise<QrCode> {
-  const qs = new URLSearchParams({ name, link });
-  const r  = await authFetch(`${API_BASE}/qr_code/${id}?${qs}`, { method: 'PUT' });
+  const r = await authFetch(`${API_BASE}/qr_code/${id}`, {
+    method : 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body   : JSON.stringify({ name, link }),
+  });
   if (!r.ok) throw await r.json();
   return r.json();
 }

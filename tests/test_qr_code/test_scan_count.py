@@ -10,7 +10,7 @@ def auth_headers(test_client):
 
 @pytest.fixture
 def qr_code(test_client, auth_headers):
-    response = test_client.post('/qr_code/?name=test&link=https://example.com', headers=auth_headers)
+    response = test_client.post('/qr_code/', json={'name': 'test', 'link': 'https://example.com'}, headers=auth_headers)
     assert response.status_code == 200, response.json()
     return response.json()
 

@@ -87,7 +87,7 @@ class BackendClient:
 
     async def create_qr_code(self, access_token: str, name: str, link: str) -> QrCode:
         data = await self._authed_json(
-            "POST", "/qr_code/", access_token, params={"name": name, "link": link}
+            "POST", "/qr_code/", access_token, json={"name": name, "link": link}
         )
         return QrCode(id=UUID(data["id"]), name=data["name"], link=data["link"])
 
@@ -96,7 +96,7 @@ class BackendClient:
             "PUT",
             f"/qr_code/{qr_code_id}",
             access_token,
-            params={"name": name, "link": link},
+            json={"name": name, "link": link},
         )
         return QrCode(id=UUID(data["id"]), name=data["name"], link=data["link"])
 
@@ -109,12 +109,12 @@ class BackendClient:
         path: str,
         access_token: str,
         *,
-        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
     ) -> Any:
         resp = await self._client.request(
             method,
             path,
-            params=params,
+            json=json,
             headers={"Authorization": f"Bearer {access_token}"},
         )
         if resp.status_code == 401:
