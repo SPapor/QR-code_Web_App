@@ -8,7 +8,7 @@ from aiogram.types import Message, URLInputFile
 
 from api_client import BackendClient, BackendError
 from auth_session import AuthSession, NotLoggedInError
-from keyboards import qr_actions
+from keyboards import BTN_NEW, cancel_menu, main_menu, qr_actions
 
 router = Router(name="qr_create")
 
@@ -19,19 +19,20 @@ class CreateStates(StatesGroup):
 
 
 @router.message(Command("new"))
+@router.message(F.text == BTN_NEW)
 async def cmd_new(message: Message, auth: AuthSession, state: FSMContext) -> None:
     if not await auth.is_logged_in():
         await message.answer("Please /start first.")
         return
     await state.set_state(CreateStates.waiting_name)
-    await message.answer("Name for the QR code?")
+    await message.answer("Name for the QR code?", reply_markup=cancel_menu())
 
 
 @router.message(CreateStates.waiting_name, F.text)
 async def create_name(message: Message, state: FSMContext) -> None:
     await state.update_data(name=message.text.strip())
     await state.set_state(CreateStates.waiting_link)
-    await message.answer("Destination URL?")
+    await message.answer("Destination URL?", reply_markup=cancel_menu())
 
 
 @router.message(CreateStates.waiting_link, F.text)
@@ -49,17 +50,18 @@ async def create_link(
     try:
         qr = await auth.call(lambda token: client.create_qr_code(token, name, link))
     except NotLoggedInError:
-        await message.answer("Session expired. Please /start again.")
+        await message.answer("Session expired. Please /start again.", reply_markup=main_menu())
         return
     except BackendError as exc:
-        await message.answer(f"Failed to create: {exc.detail or exc.status_code}")
+        await message.answer(f"Failed to create: {exc.detail or exc.status_code}", reply_markup=main_menu())
         return
 
+    # main_menu replaces the cancel keyboard; per-code inline actions are available from the list
     await message.answer_photo(
         URLInputFile(client.qr_image_url(qr.id), filename=f"{qr.name}.png"),
         caption=f"<b>{_escape(qr.name)}</b>\n{_escape(qr.link)}",
         parse_mode="HTML",
-        reply_markup=qr_actions(qr.id),
+        reply_markup=main_menu(),
     )
 
 

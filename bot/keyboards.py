@@ -1,6 +1,29 @@
 from uuid import UUID
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+
+BTN_LIST = "📋 My QR codes"
+BTN_NEW = "➕ New QR"
+BTN_HELP = "❓ Help"
+BTN_CANCEL = "✖️ Cancel"
+
+
+def main_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_LIST), KeyboardButton(text=BTN_NEW)],
+            [KeyboardButton(text=BTN_HELP)],
+        ],
+        resize_keyboard=True,
+        is_persistent=True,
+    )
+
+
+def cancel_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=BTN_CANCEL)]],
+        resize_keyboard=True,
+    )
 
 
 def qr_actions(qr_code_id: UUID) -> InlineKeyboardMarkup:

@@ -9,6 +9,7 @@ from aiogram.types import CallbackQuery, Message
 
 from api_client import BackendClient, BackendError
 from auth_session import AuthSession, NotLoggedInError
+from keyboards import cancel_menu, main_menu
 
 router = Router(name="qr_edit")
 
@@ -29,7 +30,7 @@ async def edit_start(callback: CallbackQuery, state: FSMContext, auth: AuthSessi
         return
     await state.set_state(EditStates.waiting_name)
     await state.update_data(qr_code_id=str(qr_code_id))
-    await callback.message.answer("New name?")
+    await callback.message.answer("New name?", reply_markup=cancel_menu())
     await callback.answer()
 
 
@@ -37,7 +38,7 @@ async def edit_start(callback: CallbackQuery, state: FSMContext, auth: AuthSessi
 async def edit_name(message: Message, state: FSMContext) -> None:
     await state.update_data(name=message.text.strip())
     await state.set_state(EditStates.waiting_link)
-    await message.answer("New URL?")
+    await message.answer("New URL?", reply_markup=cancel_menu())
 
 
 @router.message(EditStates.waiting_link, F.text)
@@ -56,13 +57,17 @@ async def edit_link(
     try:
         qr = await auth.call(lambda token: client.update_qr_code(token, qr_code_id, name, link))
     except NotLoggedInError:
-        await message.answer("Session expired. Please /start again.")
+        await message.answer("Session expired. Please /start again.", reply_markup=main_menu())
         return
     except BackendError as exc:
-        await message.answer(f"Failed to update: {exc.detail or exc.status_code}")
+        await message.answer(f"Failed to update: {exc.detail or exc.status_code}", reply_markup=main_menu())
         return
 
-    await message.answer(f"Updated:\n<b>{_escape(qr.name)}</b>\n{_escape(qr.link)}", parse_mode="HTML")
+    await message.answer(
+        f"Updated:\n<b>{_escape(qr.name)}</b>\n{_escape(qr.link)}",
+        parse_mode="HTML",
+        reply_markup=main_menu(),
+    )
 
 
 def _parse_id(data: str | None) -> UUID | None:

@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from api_client import BackendClient, BackendError
 from auth_session import AuthSession, NotLoggedInError
-from keyboards import qr_actions
+from keyboards import BTN_LIST, BTN_NEW, qr_actions
 
 router = Router(name="qr_list")
 
 
 @router.message(Command("list"))
+@router.message(F.text == BTN_LIST)
 async def cmd_list(message: Message, auth: AuthSession, client: BackendClient) -> None:
     try:
         qr_codes = await auth.call(lambda token: client.list_qr_codes(token))
@@ -23,7 +24,7 @@ async def cmd_list(message: Message, auth: AuthSession, client: BackendClient) -
         return
 
     if not qr_codes:
-        await message.answer("You don't have any QR codes yet. /new to create one.")
+        await message.answer(f"You don't have any QR codes yet. Tap “{BTN_NEW}” to create one.")
         return
 
     await message.answer(f"You have {len(qr_codes)} QR code(s):")

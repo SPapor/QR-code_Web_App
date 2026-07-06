@@ -8,6 +8,7 @@ from aiogram.types import Message
 
 from api_client import BackendClient, BackendError
 from auth_session import AuthSession
+from keyboards import BTN_CANCEL, BTN_HELP, main_menu
 
 router = Router(name="auth")
 
@@ -19,6 +20,7 @@ class LinkStates(StatesGroup):
 
 HELP_TEXT = (
     "QR-menu bot.\n\n"
+    "Use the buttons below to list your QR codes or create a new one.\n\n"
     "Commands:\n"
     "/start — sign in (your Telegram account is your identity here)\n"
     "/link — bind to an existing website account (login + password)\n"
@@ -46,14 +48,15 @@ async def cmd_start_link(
     await auth.store_tokens(pair)
     await message.answer(
         "Linked! This chat is now bound to your website account.\n"
-        "Use /list to see your QR codes or /new to create one."
+        "Use the buttons below to see your QR codes or create one.",
+        reply_markup=main_menu(),
     )
 
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, auth: AuthSession, client: BackendClient) -> None:
     if await auth.is_logged_in():
-        await message.answer("You are signed in. " + HELP_TEXT)
+        await message.answer("You are signed in. " + HELP_TEXT, reply_markup=main_menu())
         return
     if message.from_user is None:
         await message.answer("Cannot identify Telegram user.")
@@ -66,24 +69,27 @@ async def cmd_start(message: Message, auth: AuthSession, client: BackendClient) 
     await auth.store_tokens(pair)
     await message.answer(
         "Welcome! Your QR codes are stored under your Telegram identity.\n\n"
-        "Use /new to create a code, /list to see all of them, "
-        "or /link to bind this chat to an existing website account."
+        "Use the buttons below to create a QR code or see all of them, "
+        "or /link to bind this chat to an existing website account.",
+        reply_markup=main_menu(),
     )
 
 
 @router.message(Command("help"))
+@router.message(F.text == BTN_HELP)
 async def cmd_help(message: Message) -> None:
-    await message.answer(HELP_TEXT)
+    await message.answer(HELP_TEXT, reply_markup=main_menu())
 
 
 @router.message(Command("cancel"), StateFilter("*"))
+@router.message(F.text == BTN_CANCEL, StateFilter("*"))
 async def cmd_cancel(message: Message, state: FSMContext) -> None:
     current = await state.get_state()
     await state.clear()
     if current is None:
-        await message.answer("Nothing to cancel.")
+        await message.answer("Nothing to cancel.", reply_markup=main_menu())
     else:
-        await message.answer("Cancelled.")
+        await message.answer("Cancelled.", reply_markup=main_menu())
 
 
 @router.message(Command("logout"))

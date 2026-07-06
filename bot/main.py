@@ -5,6 +5,7 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand
 
 from api_client import BackendClient
 from handlers import build_router
@@ -29,6 +30,18 @@ async def main() -> None:
     dp.callback_query.middleware(auth_mw)
 
     dp.include_router(build_router())
+
+    await bot.set_my_commands(
+        [
+            BotCommand(command="start", description="Sign in / show the menu"),
+            BotCommand(command="list", description="Show your QR codes"),
+            BotCommand(command="new", description="Create a new QR code"),
+            BotCommand(command="link", description="Bind to a website account"),
+            BotCommand(command="cancel", description="Abort the current operation"),
+            BotCommand(command="logout", description="Sign out on this device"),
+            BotCommand(command="help", description="Help"),
+        ]
+    )
 
     log.info("Bot started, backend=%s", settings.BACKEND_URL)
     try:
