@@ -34,8 +34,8 @@ class QrCodeService:
     async def get_all_user_qr_codes(self, user_id: UUID) -> Sequence[QrCode]:
         return await self.qr_code_repo.get_all_user_qr_codes(user_id)
 
-    async def create_qr_code(self, user_id: UUID, name: str, link: str) -> QrCode:
-        qr_code = QrCode(user_id=user_id, name=name, link=link)
+    async def create_qr_code(self, user_id: UUID, name: str, link: str, **style_fields) -> QrCode:
+        qr_code = QrCode(user_id=user_id, name=name, link=link, **style_fields)
         return await self.qr_code_repo.create_and_get(qr_code)
 
     async def delete_qr_code(self, user_id: UUID, qr_code_id: UUID) -> None:
@@ -73,10 +73,12 @@ class QrCodeService:
             "last_scan_at": qr_code.last_scan_at,
         }
 
-    async def update_qr_code(self, user_id: UUID, qr_code_id: UUID, name: str, link: str) -> QrCode:
+    async def update_qr_code(self, user_id: UUID, qr_code_id: UUID, name: str, link: str, **style_fields) -> QrCode:
         qr_code = await self.qr_code_repo.get_by_id(qr_code_id)
         if qr_code.user_id != user_id:
             raise QrCode.NotFoundError
         qr_code.link = link
         qr_code.name = name
+        for field_name, value in style_fields.items():
+            setattr(qr_code, field_name, value)
         return await self.qr_code_repo.update_and_get(qr_code)

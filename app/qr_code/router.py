@@ -1,17 +1,17 @@
 import io
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import RedirectResponse, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from auth.dependencies import logged_in_user_id
 from core.dependencies import auto_commit
-from qr_code.models import QrCode
+from qr_code.models import QrCode, contrast_ratio, render_qr_image
 from qr_code.services import QrCodeService
 
 router = APIRouter(route_class=DishkaRoute)
@@ -34,8 +34,27 @@ PREVIEW_BOT_UA_MARKERS = (
 )
 
 
+HEX_COLOR = r"^#[0-9a-fA-F]{6}$"
+# below this WCAG ratio between modules and background scanners start to struggle
+MIN_QR_CONTRAST = 2.5
+
+
+class QrStylePayload(BaseModel):
+    fill_color: str = Field("#000000", pattern=HEX_COLOR)
+    fill_color2: str | None = Field(None, pattern=HEX_COLOR)  # radial-gradient edge; solid when omitted
+    back_color: str = Field("#ffffff", pattern=HEX_COLOR)
+    style: Literal["square", "rounded", "dots"] = "square"
+
+    @model_validator(mode="after")
+    def check_contrast(self) -> "QrStylePayload":
+        for color in (self.fill_color, self.fill_color2):
+            if color is not None and contrast_ratio(color, self.back_color) < MIN_QR_CONTRAST:
+                raise ValueError("not enough contrast between code and background to scan reliably")
+        return self
+
+
 # body, not query: user links must not end up in access logs
-class QrCodePayload(BaseModel):
+class QrCodePayload(QrStylePayload):
     name: str = Field(min_length=1, max_length=100)
     link: str = Field(min_length=1, max_length=2048, pattern=r"^https?://")
 
@@ -57,6 +76,20 @@ async def read_item(
     return Response(content=image_bytes, media_type="image/png", headers=IMAGE_CACHE_HEADERS)
 
 
+@router.get("/style/preview")
+async def style_preview(
+    style: Annotated[QrStylePayload, Query()],
+    _user_id: UUID = Depends(logged_in_user_id),
+):
+    # live preview for the editor: renders a sample payload with the requested style
+    image = render_qr_image(
+        "https://example.com/preview", style.fill_color, style.fill_color2, style.back_color, style.style
+    )
+    image_io = io.BytesIO()
+    image.save(image_io, format='PNG')
+    return Response(content=image_io.getvalue(), media_type="image/png")
+
+
 @router.get("/")
 async def get_all_user_qr_codes(qr_code_service: FromDishka[QrCodeService], user_id: UUID = Depends(logged_in_user_id)):
     return await qr_code_service.get_all_user_qr_codes(user_id)
@@ -69,7 +102,7 @@ async def create_qr_code(
     user_id: UUID = Depends(logged_in_user_id),
     _session: AsyncSession = Depends(auto_commit),
 ):
-    return await qr_code_service.create_qr_code(user_id, payload.name, payload.link)
+    return await qr_code_service.create_qr_code(user_id, **payload.model_dump())
 
 
 @router.delete("/{qr_code_id}")
@@ -117,4 +150,4 @@ async def edit(
     user_id: UUID = Depends(logged_in_user_id),
     _session: AsyncSession = Depends(auto_commit),
 ) -> QrCode:
-    return await qr_code_service.update_qr_code(user_id, qr_code_id, payload.name, payload.link)
+    return await qr_code_service.update_qr_code(user_id, qr_code_id, **payload.model_dump())

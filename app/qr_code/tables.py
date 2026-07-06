@@ -11,6 +11,11 @@ qr_code_table = Table(
     Column("link", String, nullable=False),
     Column("scan_count", BigInteger, nullable=False, server_default="0"),
     Column("last_scan_at", BigInteger, nullable=True),
+    Column("fill_color", String, nullable=False, server_default="#000000"),
+    # gradient end color; solid fill when NULL
+    Column("fill_color2", String, nullable=True),
+    Column("back_color", String, nullable=False, server_default="#ffffff"),
+    Column("style", String, nullable=False, server_default="square"),
 )
 
 scan_event_table = Table(
