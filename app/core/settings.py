@@ -1,4 +1,5 @@
 import os.path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = []
     COOKIE_SECURE: bool = False
-    COOKIE_SAMESITE: str = "lax"
+    COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
 
     ADMIN_USERNAME: str | None = None
     ADMIN_PASSWORD: str | None = None
@@ -31,4 +32,4 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str | None = None
 
 
-settings = Settings()  # noqa
+settings = Settings()  # type: ignore[call-arg]  # required fields come from .env / environment

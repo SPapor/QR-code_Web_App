@@ -18,6 +18,8 @@ jobs:
             advisory: true
           - check: check-flake8
             advisory: false
+          - check: check-mypy
+            advisory: false
     name: ${{ matrix.check }}
     steps:
       - name: Checkout code

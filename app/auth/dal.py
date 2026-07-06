@@ -10,7 +10,7 @@ from core.serializer import Serializer
 from core.types import DTO
 
 
-class AuthCrud(CrudBase[UUID, DTO]):
+class AuthCrud(CrudBase[UUID]):
     table = auth_table
 
     async def get_by_username(self, username: str) -> DTO:
@@ -37,7 +37,7 @@ class AuthRepo(RepoBase[UUID, Auth]):
         return self.serializer.deserialize(dto)
 
 
-class RefreshSessionCrud(CrudBase[UUID, DTO]):
+class RefreshSessionCrud(CrudBase[UUID]):
     table = refresh_session_table
 
     async def delete_expired(self, now: int) -> None:

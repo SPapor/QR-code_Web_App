@@ -10,7 +10,7 @@ from user.models import User
 from user.tables import user_table
 
 
-class UserCrud(CrudBase[UUID, DTO]):
+class UserCrud(CrudBase[UUID]):
     table = user_table
 
     async def get_by_username(self, username: str) -> DTO | None:

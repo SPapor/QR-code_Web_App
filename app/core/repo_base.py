@@ -24,7 +24,7 @@ def handle_exceptions(func):
                 raise self.entity_cls.AlreadyExistError
             raise
 
-    wrapper.__handle_exceptions__ = True
+    wrapper.__handle_exceptions__ = True  # type: ignore[attr-defined]
     return wrapper
 
 
@@ -37,7 +37,7 @@ class RepoMeta(type):
 
 
 class RepoBase[ID, MODEL: Model](metaclass=RepoMeta):
-    def __init__(self, crud: CrudBase[ID, DTO], serializer: Serializer[MODEL, DTO], entity_cls: Type[MODEL]):
+    def __init__(self, crud: CrudBase[ID], serializer: Serializer[MODEL, DTO], entity_cls: Type[MODEL]):
         self.crud = crud
         self.serializer = serializer
         self.entity_cls = entity_cls

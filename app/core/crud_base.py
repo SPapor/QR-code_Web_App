@@ -3,8 +3,10 @@ from typing import ClassVar, Sequence
 from sqlalchemy import Table, delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.types import DTO
 
-class CrudBase[ID, DTO]:
+
+class CrudBase[ID]:
     table: ClassVar[Table]
 
     def __init__(self, session: AsyncSession):
@@ -15,12 +17,12 @@ class CrudBase[ID, DTO]:
         return res.mappings().one()
 
     async def create(self, obj: DTO) -> ID:
-        res = await self.session.execute(insert(self.table).values(**obj))
+        res = await self.session.execute(insert(self.table).values(obj))
         pk = res.inserted_primary_key
         return pk[0] if len(pk) == 1 else pk
 
     async def create_and_get(self, obj: DTO) -> DTO:
-        res = await self.session.execute(insert(self.table).values(**obj).returning(self.table))
+        res = await self.session.execute(insert(self.table).values(obj).returning(self.table))
         return res.mappings().one()
 
     async def create_many(self, objs: Sequence[DTO]) -> list[ID]:
@@ -42,8 +44,7 @@ class CrudBase[ID, DTO]:
         res = await self.session.execute(
             update(self.table).where(self.table.c.id == id_).values(values).returning(self.table.c.id)
         )
-        res = res.scalars().one()
-        return res
+        return res.scalars().one()
 
     async def update_and_get(self, values: DTO) -> DTO:
         id_ = values["id"]
@@ -68,7 +69,7 @@ class CrudBase[ID, DTO]:
 
     async def count(self) -> int:
         res = await self.session.execute(select(func.count()).select_from(self.table))
-        return res.scalar()
+        return res.scalar_one()
 
     async def get_all(self) -> Sequence[DTO]:
         res = await self.session.execute(select(self.table))

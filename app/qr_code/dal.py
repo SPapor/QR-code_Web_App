@@ -11,7 +11,7 @@ from qr_code.models import QrCode, ScanEvent
 from qr_code.tables import qr_code_table, scan_event_table
 
 
-class QrCodeCrud(CrudBase[UUID, DTO]):
+class QrCodeCrud(CrudBase[UUID]):
     table = qr_code_table
 
     async def get_all_user_qr_codes(self, user_id: UUID) -> Sequence[DTO]:
@@ -48,7 +48,7 @@ class QrCodeRepo(RepoBase[UUID, QrCode]):
         await self.crud.increment_scan_count(id_, now)
 
 
-class ScanEventCrud(CrudBase[UUID, DTO]):
+class ScanEventCrud(CrudBase[UUID]):
     table = scan_event_table
 
     async def get_ts_since(self, qr_code_id: UUID, since: int) -> Sequence[int]:

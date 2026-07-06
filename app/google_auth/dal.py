@@ -10,7 +10,7 @@ from google_auth.models import GoogleLink
 from google_auth.tables import google_link_table
 
 
-class GoogleLinkCrud(CrudBase[str, DTO]):
+class GoogleLinkCrud(CrudBase[str]):
     table = google_link_table
 
     async def get_by_sub(self, google_sub: str) -> DTO | None:

@@ -10,7 +10,7 @@ from telegram_auth.models import TelegramLink, TelegramLinkCode
 from telegram_auth.tables import telegram_link_code_table, telegram_link_table
 
 
-class TelegramLinkCrud(CrudBase[int, DTO]):
+class TelegramLinkCrud(CrudBase[int]):
     table = telegram_link_table
 
     async def get_by_telegram_id(self, telegram_id: int) -> DTO | None:
@@ -55,7 +55,7 @@ class TelegramLinkRepo(RepoBase[int, TelegramLink]):
         await self.crud.delete_by_telegram_id(telegram_id)
 
 
-class TelegramLinkCodeCrud(CrudBase[str, DTO]):
+class TelegramLinkCodeCrud(CrudBase[str]):
     table = telegram_link_code_table
 
     async def get_by_code(self, code: str) -> DTO | None:

@@ -62,8 +62,8 @@ async def test_user_crud_update_many(user_crud, users_dto_in_db, users_number):
     await user_crud.update_many(payload)
     users = await user_crud.get_many_by_ids([dto['id'] for dto in users_dto_in_db])
     payload = sorted(payload, key=lambda x: x['id'])
-    for dto, payload in zip(users, payload):
-        assert dto['username'] == payload['username']
+    for dto, expected in zip(users, payload):
+        assert dto['username'] == expected['username']
 
 
 async def test_user_crud_delete(user_crud, user_dto_in_db):

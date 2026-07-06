@@ -34,9 +34,12 @@ check-isort:
 check-flake8:
 	$(PYTHON) -m flake8 --ignore=W503,E711,E712,W291,E704 --max-line-length=120 --exclude=.venv,__pycache__ ./app ./tests
 
+check-mypy:
+	$(PYTHON) -m mypy ./app ./tests
+
 pytest:
 	$(PYTHON) -m pytest ./tests
 
 lint: autoflake isort black
 
-check: check-black check-isort check-flake8
+check: check-black check-isort check-flake8 check-mypy

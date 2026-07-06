@@ -52,8 +52,8 @@ async def test_user_repo_update_many(user_repo, users_dto_in_db, users_number):
     await user_repo.update_many(payload)
 
     users = await user_repo.get_many_by_ids([dto['id'] for dto in users_dto_in_db])
-    for user, payload in zip(users, payload):
-        assert user.username == payload.username
+    for user, expected in zip(users, payload):
+        assert user.username == expected.username
 
 
 @pytest.mark.parametrize('users_number', [2])
