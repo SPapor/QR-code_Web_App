@@ -11,6 +11,8 @@ from qr_code.models import QrCode, ScanEvent
 
 # the stats endpoint serves at most 90 days, older per-scan events are dropped
 SCAN_EVENT_RETENTION_SECONDS = 90 * 24 * 3600
+# pruning on every scan would add a delete to every redirect; once per N scans keeps the table bounded anyway
+SCAN_EVENT_PRUNE_EVERY = 100
 
 
 class QrCodeService:
@@ -50,8 +52,8 @@ class QrCodeService:
         now = int(time.time())
         await self.qr_code_repo.increment_scan_count(id, now)
         await self.scan_event_repo.create(ScanEvent(qr_code_id=id, ts=now))
-        # keeps the table bounded even if someone hammers the redirect; scan_count is untouched
-        await self.scan_event_repo.delete_older_than(id, now - SCAN_EVENT_RETENTION_SECONDS)
+        if qr_code.scan_count % SCAN_EVENT_PRUNE_EVERY == 0:
+            await self.scan_event_repo.delete_older_than(id, now - SCAN_EVENT_RETENTION_SECONDS)
         return qr_code
 
     async def get_scan_stats(self, user_id: UUID, qr_code_id: UUID, days: int = 30) -> dict:
