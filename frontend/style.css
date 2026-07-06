@@ -963,6 +963,72 @@ button { font: inherit; cursor: pointer; }
   margin-bottom: 34px;
 }
 
+/* ── QR style controls (edit view) ── */
+.style-block .swatches { margin-bottom: 14px; flex-wrap: wrap; }
+.style-block .seg { margin-bottom: 14px; display: inline-flex; }
+
+.style-grid {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.style-controls { flex: 1 1 auto; min-width: 0; }
+
+.color-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.color-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink-mute);
+  cursor: pointer;
+}
+.color-field input[type="color"] {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+.color-field input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+.color-field input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+.color-field input[type="color"]::-moz-color-swatch { border: none; border-radius: 50%; }
+.color-field input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  accent-color: var(--primary-500);
+  cursor: pointer;
+}
+
+.style-preview img {
+  width: 132px;
+  height: 132px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-sm);
+  transition: opacity .2s ease;
+}
+.style-preview img.dim { opacity: 0.35; }
+
+.style-warn {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--danger);
+}
+
+@media (max-width: 480px) {
+  .style-grid { flex-direction: column-reverse; }
+  .style-preview { align-self: center; }
+}
+
 .form-actions {
   display: flex;
   gap: 18px;

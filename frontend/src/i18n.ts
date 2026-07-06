@@ -68,6 +68,17 @@ const STRINGS = {
   cancel   : { ru: 'Отмена', en: 'Cancel' },
   linkHint : { ru: 'Ссылка должна начинаться с http:// или https://', en: 'The link must start with http:// or https://' },
 
+  // edit view: style
+  qrStyle     : { ru: 'Стиль', en: 'Style' },
+  shapeAria   : { ru: 'Форма модулей', en: 'Module shape' },
+  shapeSquare : { ru: 'Квадраты', en: 'Squares' },
+  shapeRounded: { ru: 'Скругление', en: 'Rounded' },
+  shapeDots   : { ru: 'Точки', en: 'Dots' },
+  colorFill   : { ru: 'Цвет', en: 'Color' },
+  colorBack   : { ru: 'Фон', en: 'Background' },
+  gradient    : { ru: 'Градиент', en: 'Gradient' },
+  lowContrast : { ru: 'Слишком низкий контраст — код может не сканироваться', en: 'Contrast is too low — the code may not scan' },
+
   // QR modal
   qrAlt      : { ru: 'QR-код', en: 'QR code' },
   close      : { ru: 'Закрыть', en: 'Close' },

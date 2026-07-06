@@ -3,13 +3,24 @@ import { API_BASE } from './config';
 import { dateLocale, pluralCodes, pluralScans, scansShort, t } from './i18n';
 import { escapeHTML, escapeAttr, flash, apiErr } from './ui';
 
-export interface QrCode {
+export type QrShape = 'square' | 'rounded' | 'dots';
+
+export interface QrStyle {
+  fill_color: string;
+  fill_color2: string | null; // radial-gradient edge color; solid fill when null
+  back_color: string;
+  style: QrShape;
+}
+
+export interface QrCode extends QrStyle {
   id: string;
   name: string;
   link: string;
   scan_count: number;
   last_scan_at: number | null;
 }
+
+export const DEFAULT_STYLE: QrStyle = { fill_color: '#000000', fill_color2: null, back_color: '#ffffff', style: 'square' };
 
 let items: QrCode[] = [];
 let currentEditId: string | null = null;
@@ -41,21 +52,21 @@ export async function fetchAll(): Promise<QrCode[]> {
   return r.json();
 }
 
-export async function createQr(name: string, link: string): Promise<QrCode> {
+export async function createQr(name: string, link: string, style: QrStyle): Promise<QrCode> {
   const r = await authFetch(`${API_BASE}/qr_code/`, {
     method : 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body   : JSON.stringify({ name, link }),
+    body   : JSON.stringify({ name, link, ...style }),
   });
   if (!r.ok) throw await r.json();
   return r.json();
 }
 
-export async function updateQr(id: string, name: string, link: string): Promise<QrCode> {
+export async function updateQr(id: string, name: string, link: string, style: QrStyle): Promise<QrCode> {
   const r = await authFetch(`${API_BASE}/qr_code/${id}`, {
     method : 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body   : JSON.stringify({ name, link }),
+    body   : JSON.stringify({ name, link, ...style }),
   });
   if (!r.ok) throw await r.json();
   return r.json();
@@ -67,8 +78,11 @@ export async function deleteQr(id: string): Promise<null> {
   return null;
 }
 
-export function qrImageUrl(id: string): string {
-  return `${API_BASE}/qr_code/${id}/image`;
+export function qrImageUrl(q: QrCode, extra: Record<string, string> = {}): string {
+  // `v` busts browser/SW caches when the style changes; the backend ignores it
+  const sig = [q.fill_color, q.fill_color2 ?? '', q.back_color, q.style].join('').replace(/#/g, '');
+  const qs = new URLSearchParams({ ...extra, v: sig });
+  return `${API_BASE}/qr_code/${q.id}/image?${qs}`;
 }
 
 /** The public redirect URL encoded in the QR image. */
@@ -155,7 +169,7 @@ function rowHtml(q: QrCode, i: number): string {
     <div class="row" data-id="${escapeAttr(String(q.id))}" style="--i:${i}">
       <div class="n">${String(i + 1).padStart(2, '0')}</div>
       <button class="qr-thumb" type="button" data-open title="${escapeAttr(t('openQr'))}">
-        <img src="${qrImageUrl(q.id)}" alt="" loading="lazy">
+        <img src="${qrImageUrl(q)}" alt="" loading="lazy">
       </button>
       <div class="name">${escapeHTML(q.name)}</div>
       <div class="link"><a href="${escapeAttr(q.link)}" target="_blank" rel="noopener">${escapeHTML(displayLink(q.link))}</a></div>
@@ -174,7 +188,7 @@ function cardHtml(q: QrCode, i: number): string {
   return `
     <div class="card" data-id="${escapeAttr(String(q.id))}" style="--i:${i}">
       <button class="card-thumb" type="button" data-open title="${escapeAttr(t('openQr'))}">
-        <img src="${qrImageUrl(q.id)}" alt="" loading="lazy">
+        <img src="${qrImageUrl(q)}" alt="" loading="lazy">
       </button>
       <div class="card-body">
         <div class="name">${escapeHTML(q.name)}</div>
@@ -303,7 +317,7 @@ function openModal(q: QrCode): void {
   const modal = document.getElementById('qr-modal');
   if (!modal) return;
   modalQr = q;
-  (document.getElementById('modal-img') as HTMLImageElement).src = qrImageUrl(q.id);
+  (document.getElementById('modal-img') as HTMLImageElement).src = qrImageUrl(q);
   document.getElementById('modal-name')!.textContent = q.name;
 
   const link = document.getElementById('modal-link') as HTMLAnchorElement;
@@ -316,12 +330,12 @@ function openModal(q: QrCode): void {
   const fileBase = q.name.replace(/[^\wа-яё \-]+/gi, '').trim() || 'qr';
   const dl = document.getElementById('modal-download') as HTMLAnchorElement;
   // hi-res png (~1200px) so the code survives print
-  dl.href = `${qrImageUrl(q.id)}?scale=20`;
+  dl.href = qrImageUrl(q, { scale: '20' });
   dl.download = `${fileBase}.png`;
 
   const svg = document.getElementById('modal-svg') as HTMLAnchorElement | null;
   if (svg) {
-    svg.href = `${qrImageUrl(q.id)}?fmt=svg`;
+    svg.href = qrImageUrl(q, { fmt: 'svg' });
     svg.download = `${fileBase}.svg`;
   }
 
@@ -334,6 +348,151 @@ function closeModal(): void {
   const modal = document.getElementById('qr-modal');
   if (modal) modal.hidden = true;
   document.body.classList.remove('modal-open');
+}
+
+/* ── Edit view: style controls ───────────────────────────────── */
+
+interface StylePreset extends QrStyle { name: string; }
+
+const STYLE_PRESETS: StylePreset[] = [
+  { name: 'Classic',    fill_color: '#000000', fill_color2: null,      back_color: '#ffffff', style: 'square' },
+  { name: 'Terracotta', fill_color: '#A03E1E', fill_color2: null,      back_color: '#ffffff', style: 'rounded' },
+  { name: 'Ocean',      fill_color: '#2A5E8C', fill_color2: null,      back_color: '#ffffff', style: 'rounded' },
+  { name: 'Forest',     fill_color: '#2F6B44', fill_color2: null,      back_color: '#ffffff', style: 'dots' },
+  { name: 'Plum',       fill_color: '#7C3E80', fill_color2: null,      back_color: '#ffffff', style: 'dots' },
+  { name: 'Ember 3D',   fill_color: '#D97757', fill_color2: '#7C2D12', back_color: '#ffffff', style: 'rounded' },
+  { name: 'Deep 3D',    fill_color: '#2A5E8C', fill_color2: '#0B1F33', back_color: '#ffffff', style: 'dots' },
+];
+
+function styleControls() {
+  return {
+    fill : document.getElementById('edit-fill')  as HTMLInputElement,
+    fill2: document.getElementById('edit-fill2') as HTMLInputElement,
+    grad : document.getElementById('edit-grad')  as HTMLInputElement,
+    back : document.getElementById('edit-back')  as HTMLInputElement,
+  };
+}
+
+function currentShape(): QrShape {
+  const active = document.querySelector<HTMLButtonElement>('#shape-seg button.active');
+  return (active?.dataset.shape as QrShape) ?? 'square';
+}
+
+function readStyleForm(): QrStyle {
+  const c = styleControls();
+  return {
+    fill_color : c.fill.value,
+    fill_color2: c.grad.checked ? c.fill2.value : null,
+    back_color : c.back.value,
+    style      : currentShape(),
+  };
+}
+
+function setStyleForm(style: QrStyle): void {
+  const c = styleControls();
+  c.fill.value = style.fill_color;
+  c.grad.checked = style.fill_color2 != null;
+  c.fill2.value = style.fill_color2 ?? style.fill_color;
+  c.fill2.hidden = style.fill_color2 == null;
+  c.back.value = style.back_color;
+  document.querySelectorAll<HTMLButtonElement>('#shape-seg button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.shape === style.style);
+  });
+  schedulePreview();
+}
+
+/** WCAG contrast ratio; mirrors the backend check so the warning shows before submit. */
+function contrastRatio(hexA: string, hexB: string): number {
+  const lum = (hex: string): number => {
+    const chan = (c: number): number => {
+      const s = c / 255;
+      return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    };
+    const n = parseInt(hex.slice(1), 16);
+    return 0.2126 * chan(n >> 16) + 0.7152 * chan((n >> 8) & 255) + 0.0722 * chan(n & 255);
+  };
+  const [a, b] = [lum(hexA), lum(hexB)];
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+const MIN_QR_CONTRAST = 2.5;
+
+function styleFormContrastOk(style: QrStyle): boolean {
+  if (contrastRatio(style.fill_color, style.back_color) < MIN_QR_CONTRAST) return false;
+  return style.fill_color2 == null || contrastRatio(style.fill_color2, style.back_color) >= MIN_QR_CONTRAST;
+}
+
+let previewTimer: number | undefined;
+let previewObjectUrl: string | null = null;
+
+function schedulePreview(): void {
+  window.clearTimeout(previewTimer);
+  previewTimer = window.setTimeout(() => void refreshPreview(), 250);
+}
+
+async function refreshPreview(): Promise<void> {
+  const img = document.getElementById('style-preview') as HTMLImageElement | null;
+  const warn = document.getElementById('style-warn');
+  if (!img) return;
+  const style = readStyleForm();
+  const ok = styleFormContrastOk(style);
+  if (warn) warn.hidden = ok;
+  img.classList.toggle('dim', !ok);
+  if (!ok) return; // keep the previous picture dimmed, backend would 422 anyway
+  const qs = new URLSearchParams({
+    fill_color: style.fill_color,
+    back_color: style.back_color,
+    style: style.style,
+    ...(style.fill_color2 != null ? { fill_color2: style.fill_color2 } : {}),
+  });
+  try {
+    const r = await authFetch(`${API_BASE}/qr_code/style/preview?${qs}`);
+    if (!r.ok) return;
+    const url = URL.createObjectURL(await r.blob());
+    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = url;
+    img.src = url;
+    img.hidden = false;
+  } catch {
+    /* preview is decoration — fail silently */
+  }
+}
+
+function renderStylePresets(): void {
+  const box = document.getElementById('style-presets');
+  if (!box) return;
+  box.innerHTML = STYLE_PRESETS.map((p, i) => {
+    const sw2 = p.fill_color2 ?? p.fill_color;
+    return `<button type="button" class="swatch" data-preset="${i}" title="${escapeAttr(p.name)}"
+      style="--sw:${escapeAttr(p.fill_color)};--sw2:${escapeAttr(sw2)}"></button>`;
+  }).join('');
+}
+
+function initStyleControls(): void {
+  renderStylePresets();
+  const c = styleControls();
+
+  document.getElementById('style-presets')?.addEventListener('click', e => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-preset]');
+    if (!btn) return;
+    const preset = STYLE_PRESETS[Number(btn.dataset.preset)];
+    if (preset) setStyleForm(preset);
+  });
+
+  document.getElementById('shape-seg')?.addEventListener('click', e => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-shape]');
+    if (!btn) return;
+    document.querySelectorAll<HTMLButtonElement>('#shape-seg button').forEach(b => {
+      b.classList.toggle('active', b === btn);
+    });
+    schedulePreview();
+  });
+
+  c.grad.addEventListener('change', () => {
+    c.fill2.hidden = !c.grad.checked;
+    schedulePreview();
+  });
+  [c.fill, c.fill2, c.back].forEach(input => input.addEventListener('input', schedulePreview));
 }
 
 /* ── Edit view ───────────────────────────────────────────────── */
@@ -357,6 +516,7 @@ export async function syncEditView(): Promise<void> {
     if (title) title.innerHTML = 'New <em>code.</em>';
     nameInput.value = '';
     linkInput.value = '';
+    setStyleForm(DEFAULT_STYLE);
     return;
   }
 
@@ -370,6 +530,7 @@ export async function syncEditView(): Promise<void> {
   if (title) title.innerHTML = 'Edit <em>code.</em>';
   nameInput.value = q.name;
   linkInput.value = q.link;
+  setStyleForm(q);
 }
 
 /** Prepend https:// when the scheme is missing; returns null for unparseable links. */
@@ -390,12 +551,14 @@ async function handleEditSubmit(evt: Event): Promise<void> {
   if (!name || !rawLink) { flash(t('flashFillBoth'), 'error'); return; }
   const link = normalizeLink(rawLink);
   if (!link) { flash(t('flashBadLink'), 'error'); return; }
+  const style = readStyleForm();
+  if (!styleFormContrastOk(style)) { flash(t('lowContrast'), 'error'); return; }
 
   const btn = (evt.target as HTMLFormElement).querySelector<HTMLButtonElement>('[type="submit"]');
   if (btn) btn.disabled = true;
   try {
-    if (currentEditId != null) await updateQr(currentEditId, name, link);
-    else                       await createQr(name, link);
+    if (currentEditId != null) await updateQr(currentEditId, name, link, style);
+    else                       await createQr(name, link, style);
     flash(currentEditId != null ? t('flashSaved') : t('flashCreated'));
     location.hash = '#dash';
     await loadList();
@@ -446,6 +609,8 @@ export function initQrModule(): void {
 
   document.getElementById('editForm')
     ?.addEventListener('submit', handleEditSubmit);
+
+  initStyleControls();
 
   document.getElementById('search')
     ?.addEventListener('input', renderList);

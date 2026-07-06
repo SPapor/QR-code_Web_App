@@ -230,6 +230,40 @@
         <span class="field-label" data-i18n="labelLink">Ссылка</span>
         <input id="edit-link" placeholder="https://…" inputmode="url" autocomplete="off" maxlength="2048" pattern="https?://.+" title="Ссылка должна начинаться с http:// или https://" data-i18n-title="linkHint" required>
       </label>
+
+      <div class="style-block">
+        <span class="field-label" data-i18n="qrStyle">Стиль</span>
+        <div class="style-grid">
+          <div class="style-controls">
+            <div class="swatches" id="style-presets"></div>
+            <div class="seg" id="shape-seg" role="group" aria-label="Форма модулей" data-i18n-aria="shapeAria">
+              <button type="button" data-shape="square" data-i18n="shapeSquare">Квадраты</button>
+              <button type="button" data-shape="rounded" data-i18n="shapeRounded">Скругление</button>
+              <button type="button" data-shape="dots" data-i18n="shapeDots">Точки</button>
+            </div>
+            <div class="color-row">
+              <label class="color-field">
+                <input type="color" id="edit-fill" value="#000000">
+                <span data-i18n="colorFill">Цвет</span>
+              </label>
+              <label class="color-field">
+                <input type="color" id="edit-back" value="#ffffff">
+                <span data-i18n="colorBack">Фон</span>
+              </label>
+              <label class="color-field">
+                <input type="checkbox" id="edit-grad">
+                <input type="color" id="edit-fill2" value="#333333" hidden>
+                <span data-i18n="gradient">Градиент</span>
+              </label>
+            </div>
+            <div id="style-warn" class="style-warn" hidden data-i18n="lowContrast">Слишком низкий контраст — код может не сканироваться</div>
+          </div>
+          <div class="style-preview">
+            <img id="style-preview" alt="" hidden>
+          </div>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn-primary" data-i18n="save">Сохранить</button>
         <a href="#dash" data-i18n="cancel">Отмена</a>
